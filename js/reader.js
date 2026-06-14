@@ -2,6 +2,7 @@
 // draggable row-ruler, an embedded row counter, and highlighter/pencil/eraser annotation.
 // Annotation + counter saved per pattern (IDB). PDFs render via vendored pdf.js. Pinch-zoom supported.
 import { putUpload } from './idb.js';
+import { videosForPattern, categoryIdsForPattern } from './videos.js';
 
 const E = (t, c, h) => { const e = document.createElement(t); if (c) e.className = c; if (h != null) e.innerHTML = h; return e; };
 const RENDER_W = 1000;
@@ -9,6 +10,7 @@ const RS = (p) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" st
 const RI = {
   ruler: RS('<rect x="3" y="8.5" width="18" height="7" rx="1"/><path d="M7 8.5v3M11 8.5v4M15 8.5v3M19 8.5v4"/>'),
   marker: RS('<path d="M4 20h5"/><path d="M9.5 15 15 9.5l3 3L12.5 18H9.5z"/><path d="M14 8.5 17 5.5l2 2-3 3"/>'),
+  video: RS('<rect x="3" y="6" width="18" height="12" rx="2"/><path d="M10 9.5l5 2.5-5 2.5z"/>'),
   pencil: RS('<path d="M5 19l1.2-4L15 6.2l2.8 2.8L9 17.8z"/><path d="M14 7l3 3"/>'),
   eraser: RS('<path d="M8 17 4.5 13.5 12 6l4.5 4.5L11.5 17z"/><path d="M6 19h11"/>'),
   trash: RS('<path d="M5 7h14M9.5 7V5h5v2M7 7l1 12h8l1-12"/>'),
@@ -35,6 +37,7 @@ export async function openReader(upload, progress) {
         <button class="rbtn lbl zout" aria-label="Zoom ud"><span>−</span><small>Zoom</small></button>
         <button class="rbtn lbl zin" aria-label="Zoom ind"><span>＋</span><small>Zoom</small></button>
         <button class="rbtn lbl clear" aria-label="Ryd tegning"><span>${RI.trash}</span><small>Ryd</small></button>
+        <button class="rbtn lbl videobtn" aria-label="Videoer"><span>${RI.video}</span><small>Video</small></button>
       </div>
     </div>
     <div class="reader-stage">
@@ -119,6 +122,19 @@ export async function openReader(upload, progress) {
   ov.querySelector('.zin').onclick = () => { scale = Math.min(4, scale + 0.25); applyScale(); };
   ov.querySelector('.zout').onclick = () => { scale = Math.max(1, scale - 0.25); applyScale(); };
   ov.querySelector('.clear').onclick = () => { if (confirm('Ryd dine tegninger på denne opskrift?')) ctx.clearRect(0, 0, canvas.width, canvas.height); };
+  ov.querySelector('.videobtn').onclick = () => showVideos();
+
+  function showVideos() {
+    const pid = 'up:' + upload.id;
+    const vids = videosForPattern(pid, categoryIdsForPattern(pid));
+    const sheet = E('div', 'reader-sheet');
+    const rows = vids.length
+      ? vids.map((v) => `<a class="rv-row" href="${(v.url || '').replace(/"/g, '&quot;')}" target="_blank" rel="noopener noreferrer">▶ ${(v.title || '').replace(/[<>&]/g, '')}</a>`).join('')
+      : `<p class="rv-empty">Ingen videoer tilknyttet denne opskrift endnu.<br>Du kan tilføje dem i Opskrifter ▸ Videoer.</p>`;
+    sheet.innerHTML = `<div class="rv-panel"><h3>Videoer</h3>${rows}<button class="rv-close">Luk</button></div>`;
+    sheet.addEventListener('click', (e) => { if (e.target === sheet || e.target.classList.contains('rv-close')) sheet.remove(); });
+    ov.append(sheet);
+  }
 
   // ---- pinch-zoom (two fingers) on the stage, with focal point ----
   const ptrs = new Map();

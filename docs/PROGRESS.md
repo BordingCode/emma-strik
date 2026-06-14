@@ -106,6 +106,15 @@ Counter + calculators + 64-pattern curated gallery. To grow gallery: add verifie
   "<Name>s Strik" (Danish possessive: apostrophe for names ending s/x/z → "Lars' Strik"). Stored in
   `es_ownerName`. Verified Dorthe→"Dorthes Strik", Lars→"Lars' Strik".
 
+## Phase 8 — video library (moved + manageable + contextual)  ✅ DONE (SW v20)
+- Videos moved OUT of Beregner into **Opskrifter ▸ Videoer** (3rd view segment). New js/videos.js (localStorage
+  `videos`, seeded once with Kimmie Munkholm/PetiteKnit/YouTube defaults so deletes stick).
+- **Add / edit / remove** videos; each can be **attached to a recipe** (her uploads + curated patterns) **and/or a
+  category** (collection). URL auto-prefixed https://. Tags show attachment (recipe / kategori / Generel).
+- **Contextual surfacing**: pattern cards show a "▶ N" badge → opens the attached videos; the in-pattern **reader**
+  has a Video toolbar button → sheet of videos attached to that recipe (+ its categories), with hint to add more.
+- Browser-verified: 3 segments, seed, add-attached-to-flax, badge ▶1 + sheet, reader button+sheet, Beregner clean, 0 errors.
+
 ## Key decisions (full detail in DESIGN.md)
 Danish mobile-first PWA = knitting companion (multi-counter projects + calculators) + curated link
 gallery (DK/EN, credited thumbnails linking out). Don't build a pattern DB. Vanilla JS, no build,

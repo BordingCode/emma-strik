@@ -6,27 +6,7 @@ export function initCalculators(node, helpers) {
   node.innerHTML = `<div class="pagehead"><h1>Beregner</h1>
     <p class="hint">De små regnestykker, der altid driller — løst for dig. Tryk på ⓘ hvis du er i tvivl.</p></div>
     <div class="calcs"></div>`;
-  node.querySelector('.calcs').append(evenCalc(), gaugeCalc(), yarnCalc(), substGuide(), videoCard());
-}
-
-function videoCard() {
-  const c = card('Hjælpevideoer',
-    'Se teknikkerne gjort — trin for trin, af dygtige strikkere.',
-    `<p><b>Hvad er det?</b> Links til gode video-guides. Sidder du fast i en teknik (fx en snoning eller en italiensk opslagning), så er der næsten altid en video, der viser præcis hvordan.</p>
-     <p>Tryk på et link for at åbne videoen i en ny fane.</p>`);
-  const links = [
-    ['Kimmie Munkholm', 'Dansk — alt fra slå-op til snoninger og flerfarvet strik', 'https://www.youtube.com/channel/UC3vgNeiHiliP8q9fVwjnA5w'],
-    ['PetiteKnit · videoer', 'Teknik-videoer til PetiteKnits opskrifter', 'https://www.petiteknit.com/en/pages/video'],
-    ['Søg på YouTube', 'Find en video til lige det, du sidder med', 'https://www.youtube.com/results?search_query=strikketeknik+dansk'],
-  ];
-  const list = E('div', 'vidlist');
-  links.forEach(([t, d, u]) => {
-    const a = E('a', 'vidlink'); a.href = u; a.target = '_blank'; a.rel = 'noopener noreferrer';
-    a.innerHTML = `<span class="vi">▶</span><span class="vmeta"><b>${t}</b><small>${d}</small></span><span class="varr">→</span>`;
-    list.append(a);
-  });
-  c.append(list);
-  return c;
+  node.querySelector('.calcs').append(evenCalc(), gaugeCalc(), yarnCalc(), substGuide());
 }
 
 const E = (t, c, h) => { const e = document.createElement(t); if (c) e.className = c; if (h != null) e.innerHTML = h; return e; };

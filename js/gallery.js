@@ -6,6 +6,7 @@ import { allUploads, putUpload, delUpload } from './idb.js';
 import { CAT_ICONS, ICON_GROUPS, DEFAULT_ICON, catThumb } from './caticons.js';
 import { openReader } from './reader.js';
 import { pdfThumb } from './pdfthumb.js';
+import { getVideos, saveVideos, videosForPattern, categoryIdsForPattern } from './videos.js';
 
 const E = (t, c, h) => { const e = document.createElement(t); if (c) e.className = c; if (h != null) e.innerHTML = h; return e; };
 const DIFF = { 'begynder': '● Begynder', 'let øvet': '●● Let øvet', 'øvet': '●●● Øvet' };
@@ -51,12 +52,14 @@ function render() {
 
   // view switch
   const seg = E('div', 'viewseg');
-  ['mine', 'browse'].forEach((v) => {
-    const b = E('button', 'segbtn' + (filters.view === v ? ' on' : ''), v === 'mine' ? 'Mine opskrifter' : 'Find nye');
+  [['mine', 'Mine opskrifter'], ['browse', 'Find nye'], ['videos', 'Videoer']].forEach(([v, lbl]) => {
+    const b = E('button', 'segbtn' + (filters.view === v ? ' on' : ''), lbl);
     b.onclick = () => { filters.view = v; filters.collection = null; filters.cat = 'all'; render(); };
     seg.append(b);
   });
   node.append(seg);
+
+  if (filters.view === 'videos') { renderVideos(); return; }
 
   const ctr = E('div', 'gctrls');
   const search = E('input', 'gsearch'); search.type = 'search'; search.placeholder = 'Søg…'; search.value = filters.q;
@@ -175,10 +178,89 @@ function card(p) {
     ob.onclick = () => { owned.has(p.id) ? owned.delete(p.id) : owned.add(p.id); saveOwned(); render(); };
     foot.append(ob);
   }
+  const vids = videosForPattern(p.id, categoryIdsForPattern(p.id));
+  if (vids.length) { const vb = E('button', 'vidbadge', `▶ ${vids.length}`); vb.title = 'Videoer til denne opskrift'; vb.onclick = () => videoSheet(p, vids); foot.append(vb); }
   const more = E('button', 'morebtn', '⋯'); more.onclick = () => actionSheet(p); foot.append(more);
   body.append(foot);
   a.append(thumb, body);
   return a;
+}
+
+// quick sheet listing the videos attached to a pattern (read-only)
+function videoSheet(p, vids) {
+  const f = E('div', 'sheet', `<h2>Videoer · ${esc(p.name)}</h2>`);
+  const list = E('div', 'sheetacts');
+  (vids || videosForPattern(p.id, categoryIdsForPattern(p.id))).forEach((v) => {
+    const a = E('a', 'sheetbtn vidrow'); a.href = v.url; a.target = '_blank'; a.rel = 'noopener noreferrer';
+    a.innerHTML = `<span class="vi">▶</span> ${esc(v.title)}`;
+    list.append(a);
+  });
+  const add = E('button', 'sheetbtn newc', '+ Tilføj video til denne opskrift'); add.onclick = () => { m.close(); videoModal(null, p.id); };
+  const cancel = E('button', 'sheetbtn subtle', 'Luk'); cancel.onclick = () => m.close();
+  list.append(add, cancel); f.append(list);
+  const m = M(f);
+}
+
+/* ---------------- videos ---------------- */
+function patternName(id) { const c = allCards().find((p) => p.id === id); return c ? c.name : null; }
+function categoryName(id) { const c = collections.find((x) => x.id === id); return c ? c.name : null; }
+
+function renderVideos() {
+  const ctr = E('div', 'gctrls');
+  ctr.append(E('p', 'hint', 'Gem links til gode video-guides. Du kan knytte en video til en bestemt opskrift eller kategori, så den dukker op netop dér.'));
+  const add = E('button', 'addown wide', '+ Tilføj video'); add.onclick = () => videoModal(); ctr.append(add);
+  node.append(ctr);
+
+  const vids = getVideos();
+  if (!vids.length) { node.append(E('p', 'empty', 'Ingen videoer endnu. Tryk “+ Tilføj video”.')); return; }
+  const list = E('div', 'vidmanage');
+  vids.forEach((v) => {
+    const row = E('div', 'vidcard');
+    const tags = [];
+    const pn = v.patternId ? patternName(v.patternId) : null;
+    const cn = v.categoryId ? categoryName(v.categoryId) : null;
+    if (pn) tags.push(`<span class="vtag op">${esc(pn)}</span>`);
+    if (cn) tags.push(`<span class="vtag ka">${esc(cn)}</span>`);
+    if (!pn && !cn) tags.push(`<span class="vtag gen">Generel</span>`);
+    row.innerHTML = `<a class="vidmain" href="${esc(v.url)}" target="_blank" rel="noopener noreferrer"><span class="vi">▶</span><span class="vmeta"><b>${esc(v.title)}</b><span class="vtags">${tags.join('')}</span></span></a>`;
+    const edit = E('button', 'videdit', '✎'); edit.title = 'Rediger'; edit.onclick = () => videoModal(v);
+    const del = E('button', 'viddel', '×'); del.title = 'Fjern'; del.onclick = () => { if (confirm('Fjern videoen “' + v.title + '”?')) { saveVideos(getVideos().filter((x) => x.id !== v.id)); render(); } };
+    row.append(edit, del); list.append(row);
+  });
+  node.append(list);
+}
+
+function videoModal(existing, defaultPatternId) {
+  const f = E('div', 'form');
+  const owns = uploads.map(uploadCard);
+  const curUrl = existing ? existing.url : '';
+  const pid = existing ? existing.patternId : (defaultPatternId || '');
+  const cid = existing ? existing.categoryId : '';
+  const opt = (id, label, sel) => `<option value="${esc(id)}"${sel ? ' selected' : ''}>${esc(label)}</option>`;
+  const patOpts = `<option value="">— ingen —</option>`
+    + (owns.length ? `<optgroup label="Mine opskrifter">${owns.map((p) => opt(p.id, p.name, p.id === pid)).join('')}</optgroup>` : '')
+    + `<optgroup label="Find nye (bibliotek)">${PATTERNS.map((p) => opt(p.id, p.name, p.id === pid)).join('')}</optgroup>`;
+  const catOpts = `<option value="">— ingen —</option>` + collections.map((c) => opt(c.id, c.name, c.id === cid)).join('');
+  f.innerHTML = `<h2>${existing ? 'Rediger video' : 'Tilføj video'}</h2>
+    <label>Titel<input id="v-title" type="text" maxlength="60" placeholder="fx Italiensk opslagning" value="${existing ? esc(existing.title) : ''}"></label>
+    <label>Link (URL)<input id="v-url" type="url" inputmode="url" placeholder="https://…" value="${esc(curUrl)}"></label>
+    <label>Tilknyt opskrift (valgfri)<select id="v-pat">${patOpts}</select></label>
+    <label>Tilknyt kategori (valgfri)<select id="v-cat">${catOpts}</select></label>
+    <div class="form-actions"><button class="ghost cancel">Annuller</button><button class="primary ok">Gem</button></div>`;
+  const m = M(f);
+  f.querySelector('.cancel').onclick = () => m.close();
+  f.querySelector('.ok').onclick = () => {
+    const title = f.querySelector('#v-title').value.trim();
+    let url = f.querySelector('#v-url').value.trim();
+    if (!title || !url) { alert('Skriv både en titel og et link.'); return; }
+    if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
+    const patternId = f.querySelector('#v-pat').value || null;
+    const categoryId = f.querySelector('#v-cat').value || null;
+    const vids = getVideos();
+    if (existing) { Object.assign(existing, { title, url, patternId, categoryId }); saveVideos(vids); }
+    else { vids.push({ id: uid(), title, url, patternId, categoryId }); saveVideos(vids); }
+    m.close(); render();
+  };
 }
 
 /* ---------------- actions ---------------- */
