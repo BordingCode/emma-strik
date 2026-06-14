@@ -89,3 +89,26 @@ input, textarea { font-family: inherit; }
 .form input.check, .form label.check input { width: auto; }
 .form-actions { display: flex; gap: 10px; margin-top: 6px; }
 .form-actions .ghost, .form-actions .primary { flex: 1; }
+
+/* ============ Beregner (calculators) ============ */
+.calcs { display: flex; flex-direction: column; gap: 14px; }
+.calc { background: var(--paper); border: 1px solid var(--line); border-radius: 14px; padding: 14px; box-shadow: var(--shadow); }
+.calc h2 { font-size: 17px; margin-bottom: 4px; }
+.csub { color: var(--muted); font-size: 13px; margin-bottom: 10px; line-height: 1.4; }
+.calc .nl { display: block; font-size: 13px; color: var(--muted); margin-bottom: 10px; }
+.calc input[type=number] { display: block; width: 100%; margin-top: 4px; background: var(--cream);
+  border: 1px solid var(--line); border-radius: 10px; padding: 11px; font-size: 16px; color: var(--ink); }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 10px; }
+.mini { font-size: 13px; color: var(--ink); margin: 6px 0 4px; font-weight: 600; }
+.mini.note { font-weight: 400; color: var(--muted); line-height: 1.5; margin-top: 12px; }
+.result { margin-top: 6px; padding: 12px; border-radius: 10px; background: #f3efe3; color: var(--ink);
+  font-size: 15px; line-height: 1.55; min-height: 0; }
+.result:empty { display: none; }
+.result b { color: var(--wool-dk); }
+.result .seq { display: inline-block; margin: 4px 0; color: var(--sage); font-weight: 600; }
+.result small { color: var(--muted); font-size: 12px; }
+.wtbl { width: 100%; border-collapse: collapse; margin-top: 6px; font-size: 14px; }
+.wtbl th, .wtbl td { text-align: left; padding: 7px 6px; border-bottom: 1px solid var(--line); }
+.wtbl th { color: var(--muted); font-weight: 600; font-size: 12px; text-transform: uppercase; }
+.srclink { display: inline-block; margin-top: 8px; color: var(--wool-dk); font-weight: 600; text-decoration: none;
+  border-bottom: 2px solid var(--line); padding-bottom: 1px; }

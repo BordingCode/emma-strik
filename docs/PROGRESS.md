@@ -11,8 +11,14 @@
 - ✅ browser-verified (phone): create/count/multi-counter/wrap/repeat/follow all correct; persists across reload (restores to active project); 0 console errors
 - NOTE: nav/top emoji render as boxes on Linux test browser only — fine on iOS/Android (consider SVG in M4)
 
-## M2 — Calculators  ⬜
-(distribute inc/dec evenly · gauge resize · yarn needed/substitution w/ DROPS A–F groups)
+## M2 — Calculators  ✅ DONE
+- ✅ Fordel ind-/udtagninger jævnt (current→target; even Bresenham grouping; M1 for inc, k2tog for dec; validates)
+- ✅ Omregn ved anden strikkefasthed (sts & rows resize by gauge ratio)
+- ✅ Garnberegner (balls needed by meterage, +1 spare tip)
+- ✅ Garnerstatning guide: accurate general weight→gauge table + VERIFIED DROPS rule + link to DROPS A–F
+  (NOTE: DROPS site blocks fetch from here — WebFetch 503 / browser timeout / curl 000; secondary sources
+  conflict on per-letter gauges, so did NOT bake DROPS numbers in — linked to source instead, honest.)
+- ✅ browser-verified live results all correct; 0 console errors. SW→v2.
 
 ## M3 — Gallery  ⬜
 (curated REAL patterns DK+EN, filter/search/favourites, credited thumbnails + "Se opskrift" links — research & verify, never invent)
