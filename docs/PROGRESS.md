@@ -20,8 +20,19 @@
   conflict on per-letter gauges, so did NOT bake DROPS numbers in — linked to source instead, honest.)
 - ✅ browser-verified live results all correct; 0 console errors. SW→v2.
 
-## M3 — Gallery  ⬜
-(curated REAL patterns DK+EN, filter/search/favourites, credited thumbnails + "Se opskrift" links — research & verify, never invent)
+## M3 — Gallery  ✅ DONE
+- ✅ data/patterns.js: 23 REAL, web-verified patterns (DROPS/PetiteKnit/Tin Can Knits/Sandnes/Purl Soho/
+  Ravelry) across sweater/accessory/baby/home; free+paid mix; DK+EN; og:image URLs where verifiable (5 null)
+- ✅ gallery.js: filter chips (category) + "Kun gratis" + "♥ Gemte" + search; cards w/ photo + tags
+  (free/paid, difficulty, weight, DA/EN), credit (designer · source), "Se opskrift →" link OUT
+- ✅ graceful image fallback (img.onerror → tasteful category placeholder; null images too) — no broken images
+- ✅ favourites persisted (localStorage); browser-verified on phone: filter/search/fav/links all work, real
+  images load (Ravelry/PetiteKnit/DROPS hotlink OK), 0 console errors. SW→v3.
+- NOTE: never fabricated links/images; agent left unverifiable images null on purpose.
+
+## M4 — Polish  ⬜ (OPTIONAL — app is fully usable)
+- ⬜ swap nav/top emoji → inline SVG (emoji render on iOS/Android; only boxes on Linux test browser)
+- ⬜ optional desktop max-width centering for the gallery; tiny visual touches
 
 ## M4 — Polish  ⬜
 (cozy visual design, PWA/offline, icon, Bording Hub)
