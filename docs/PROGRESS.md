@@ -38,9 +38,6 @@
 ## 🎉 ALL MILESTONES DONE — app complete & live: https://bordingcode.github.io/emma-strik/
 Counter + calculators + 64-pattern curated gallery. To grow gallery: add verified entries to data/patterns.js.
 
-## M4 — Polish  ⬜
-(cozy visual design, PWA/offline, icon, Bording Hub)
-
 ## Key decisions (full detail in DESIGN.md)
 Danish mobile-first PWA = knitting companion (multi-counter projects + calculators) + curated link
 gallery (DK/EN, credited thumbnails linking out). Don't build a pattern DB. Vanilla JS, no build,
