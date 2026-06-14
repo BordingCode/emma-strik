@@ -115,6 +115,18 @@ Counter + calculators + 64-pattern curated gallery. To grow gallery: add verifie
   has a Video toolbar button → sheet of videos attached to that recipe (+ its categories), with hint to add more.
 - Browser-verified: 3 segments, seed, add-attached-to-flax, badge ▶1 + sheet, reader button+sheet, Beregner clean, 0 errors.
 
+## Phase 9 — Emma's emailed wishlist round 2 (project info + status period)  ✅ DONE (SW v21)
+- **Projektinfo [email 17]**: project form gained Størrelse, Strikkefasthed, Modtager, Startdato, Slutdato.
+  Shown as a tidy info block in the project detail (Danish dd.mm.yyyy). A manual Slutdato sets finishedAt
+  (drives the status period). Finish modal also has an "Afsluttet dato" field (defaults to today, backdatable).
+- **Statusoversigt period [email 14]**: replaced "I år / I alt" with a **year dropdown** (Alle år / I år / each
+  year that has finished projects) + a **month dropdown** (Hele året / Jan–Dec, disabled when "Alle år").
+  Meter/gram/færdige + the photo strip all respect the chosen period. Verified: 2026=1050m, 2025=300m,
+  all=1350m, March-2025=1, April-2025=0; info block + form fields present; 0 errors.
+- Backups now also include `videos` + `ownerName`.
+- NOTE (already built, confirmed by Emma's emails 12/13/15/16): reader ruler+counter+annotation, calculators,
+  owned-recipe categories, category icons — all done in earlier phases.
+
 ## Key decisions (full detail in DESIGN.md)
 Danish mobile-first PWA = knitting companion (multi-counter projects + calculators) + curated link
 gallery (DK/EN, credited thumbnails linking out). Don't build a pattern DB. Vanilla JS, no build,

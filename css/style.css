@@ -265,6 +265,13 @@ input, textarea { font-family: inherit; }
 .statuscard { background: var(--paper); border: 1px solid var(--line); border-radius: 14px; padding: 12px; box-shadow: var(--shadow); margin-bottom: 16px; }
 .sthead { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
 .stperiod { display: flex; gap: 6px; margin-bottom: 10px; }
+.stsel { flex: 1; min-width: 0; background: var(--cream); border: 1px solid var(--line); border-radius: 9px; padding: 8px 10px; font-size: 13px; color: var(--ink); }
+.stsel:disabled { opacity: .5; }
+.projinfo { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 6px 12px; margin-top: 10px; box-shadow: var(--shadow); }
+.pi-row { display: flex; justify-content: space-between; gap: 12px; padding: 6px 0; border-bottom: 1px solid var(--line); font-size: 14px; }
+.pi-row:last-child { border-bottom: none; }
+.pi-k { color: var(--muted); flex: 0 0 auto; }
+.pi-v { color: var(--ink); text-align: right; font-weight: 600; min-width: 0; }
 .stp { background: var(--cream); border: 1px solid var(--line); border-radius: 16px; padding: 5px 12px; font-size: 13px; color: var(--muted); }
 .stp.on { background: var(--wool); color: #fff; border-color: var(--wool); }
 .sttiles { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }

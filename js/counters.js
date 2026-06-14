@@ -8,7 +8,18 @@ import { CAT_ICONS, ICON_GROUPS, DEFAULT_ICON } from './caticons.js';
 let E, M, node;
 let projects = [], activeId = null;
 let wakeLock = null;
-let statusPeriod = 'year';
+let statusPeriod = { y: 'cur', m: 'all' }; // y: 'all' | 'cur' | <year>; m: 'all' | 0..11
+const MONTHS = ['januar', 'februar', 'marts', 'april', 'maj', 'juni', 'juli', 'august', 'september', 'oktober', 'november', 'december'];
+function selYear() { return statusPeriod.y === 'cur' ? new Date().getFullYear() : statusPeriod.y; }
+function matchPeriod(p) {
+  if (statusPeriod.y === 'all') return true;
+  if (!p.finishedAt) return false;
+  const d = new Date(p.finishedAt);
+  if (d.getFullYear() !== Number(selYear())) return false;
+  if (statusPeriod.m !== 'all' && d.getMonth() !== Number(statusPeriod.m)) return false;
+  return true;
+}
+const finishedInPeriod = () => projects.filter((p) => p.done && matchPeriod(p));
 const projMeters = (p) => {
   if (!p.gramsUsed) return 0;
   if (p.mPer50g) return Math.round(p.gramsUsed * p.mPer50g / 50);
@@ -16,6 +27,8 @@ const projMeters = (p) => {
   return 0;
 };
 const needleFmt = (mm) => (mm % 1 === 0 ? String(mm) : mm.toFixed(1).replace('.', ',')) + ' mm';
+const fmtDate = (s) => { if (!s) return ''; const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s); return m ? `${m[3]}.${m[2]}.${m[1]}` : s; };
+const todayStr = () => { const d = new Date(); const p = (n) => String(n).padStart(2, '0'); return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`; };
 
 export function initCounters(container, helpers) {
   E = helpers.el; M = helpers.modal; node = container;
@@ -59,15 +72,27 @@ function projCard(p) {
 }
 
 function statusCard() {
-  const year = new Date().getFullYear();
+  const curYear = new Date().getFullYear();
   const done = projects.filter((p) => p.done);
-  const inP = statusPeriod === 'all' ? done : done.filter((p) => p.finishedAt && new Date(p.finishedAt).getFullYear() === year);
+  const years = [...new Set(done.map((p) => (p.finishedAt ? new Date(p.finishedAt).getFullYear() : null)).filter(Boolean))].sort((a, b) => b - a);
+  if (!years.includes(curYear)) years.unshift(curYear);
+  const inP = finishedInPeriod();
   const grams = inP.reduce((s, p) => s + (Number(p.gramsUsed) || 0), 0);
   const meters = inP.reduce((s, p) => s + projMeters(p), 0);
   const ongoing = projects.filter((p) => !p.done).length;
+
+  const yVal = statusPeriod.y === 'all' ? 'all' : (statusPeriod.y === 'cur' ? curYear : statusPeriod.y);
+  const yearOpts = `<option value="all"${statusPeriod.y === 'all' ? ' selected' : ''}>Alle år</option>`
+    + years.map((y) => `<option value="${y}"${String(yVal) === String(y) ? ' selected' : ''}>${y === curYear ? 'I år (' + y + ')' : y}</option>`).join('');
+  const monthOpts = `<option value="all"${statusPeriod.m === 'all' ? ' selected' : ''}>Hele året</option>`
+    + MONTHS.map((mn, i) => `<option value="${i}"${String(statusPeriod.m) === String(i) ? ' selected' : ''}>${mn[0].toUpperCase() + mn.slice(1)}</option>`).join('');
+
   const c = E('div', 'statuscard');
   c.innerHTML = `<div class="sthead">Din statusoversigt</div>
-    <div class="stperiod"><button class="stp${statusPeriod === 'year' ? ' on' : ''}" data-p="year">I år (${year})</button><button class="stp${statusPeriod === 'all' ? ' on' : ''}" data-p="all">I alt</button></div>
+    <div class="stperiod">
+      <select class="stsel" id="st-year">${yearOpts}</select>
+      <select class="stsel" id="st-month"${statusPeriod.y === 'all' ? ' disabled' : ''}>${monthOpts}</select>
+    </div>
     <div class="sttiles">
       <div class="sttile"><b>${inP.length}</b><span>færdige</span></div>
       <div class="sttile"><b>${ongoing}</b><span>i gang</span></div>
@@ -75,7 +100,8 @@ function statusCard() {
       <div class="sttile"><b>${grams}</b><span>gram brugt</span></div>
     </div>
     <div class="stphotos"></div>`;
-  c.querySelectorAll('.stp').forEach((b) => b.onclick = () => { statusPeriod = b.dataset.p; renderList(); });
+  c.querySelector('#st-year').onchange = (e) => { statusPeriod.y = e.target.value === 'all' ? 'all' : Number(e.target.value); if (statusPeriod.y === 'all') statusPeriod.m = 'all'; renderList(); };
+  c.querySelector('#st-month').onchange = (e) => { statusPeriod.m = e.target.value === 'all' ? 'all' : Number(e.target.value); renderList(); };
   return c;
 }
 
@@ -86,9 +112,7 @@ async function fillPhotos() {
   }
   const strip = node.querySelector('.stphotos');
   if (strip) {
-    const year = new Date().getFullYear();
-    const done = projects.filter((p) => p.done && p.photoId);
-    const inP = statusPeriod === 'all' ? done : done.filter((p) => p.finishedAt && new Date(p.finishedAt).getFullYear() === year);
+    const inP = finishedInPeriod().filter((p) => p.photoId);
     for (const p of inP) {
       try { const ph = await getPhoto(p.photoId); if (ph && ph.blob) { const img = E('img', 'stphoto'); img.src = URL.createObjectURL(ph.blob); img.alt = esc(p.name); strip.append(img); } } catch (e) {}
     }
@@ -146,6 +170,19 @@ function renderDetail() {
   patBtn.onclick = () => openPattern(p);
   node.append(patBtn);
 
+  // project details (size / gauge / recipient / dates) — only the ones that are filled
+  const rows = [];
+  if (p.size) rows.push(['Størrelse', esc(p.size)]);
+  if (p.gauge) rows.push(['Strikkefasthed', esc(p.gauge)]);
+  if (p.recipient) rows.push(['Modtager', esc(p.recipient)]);
+  if (p.startDate) rows.push(['Startet', fmtDate(p.startDate)]);
+  if (p.endDate) rows.push(['Afsluttet', fmtDate(p.endDate)]);
+  if (rows.length) {
+    const info = E('div', 'projinfo');
+    info.innerHTML = rows.map(([k, v]) => `<div class="pi-row"><span class="pi-k">${k}</span><span class="pi-v">${v}</span></div>`).join('');
+    node.append(info);
+  }
+
   // extra counters
   const extras = p.counters.slice(1);
   if (extras.length) {
@@ -198,6 +235,10 @@ function projectModal(existing) {
     <label>Garn<input id="f-yarn" type="text" list="f-yarnlist" maxlength="40" placeholder="fx Drops Air" value="${existing ? esc(existing.yarn || '') : ''}"><datalist id="f-yarnlist">${yarnOpts}</datalist></label>
     <label>Pinde<select id="f-needle">${needleOpts}</select></label>
     <label>Kategori<select id="f-cat">${catOpts}</select></label>
+    <div class="formsec">Projektdetaljer (valgfrit)</div>
+    <div class="grid2"><label class="nl">Størrelse<input id="f-size" type="text" maxlength="30" placeholder="fx M / 98-104" value="${existing ? esc(existing.size || '') : ''}"></label><label class="nl">Modtager<input id="f-recipient" type="text" maxlength="30" placeholder="fx Til mor" value="${existing ? esc(existing.recipient || '') : ''}"></label></div>
+    <label>Strikkefasthed<input id="f-gauge" type="text" maxlength="40" placeholder="fx 22 m × 30 p = 10×10 cm" value="${existing ? esc(existing.gauge || '') : ''}"></label>
+    <div class="grid2"><label class="nl">Startdato<input id="f-start" type="date" value="${existing ? esc(existing.startDate || '') : ''}"></label><label class="nl">Slutdato<input id="f-end" type="date" value="${existing ? esc(existing.endDate || '') : ''}"></label></div>
     <label>Noter<textarea id="f-notes" rows="2" maxlength="200" placeholder="evt. noter">${existing ? esc(existing.notes || '') : ''}</textarea></label>
     <div class="formsec">Garnforbrug (til din statusoversigt — valgfrit)</div>
     <div class="grid2"><label class="nl">Garn brugt (g)<input id="f-grams" type="number" inputmode="numeric" min="0" placeholder="fx 350" value="${existing && existing.gramsUsed != null ? existing.gramsUsed : ''}"></label><label class="nl">Løbelængde (m / 50 g)<input id="f-runlen" type="number" inputmode="numeric" min="0" placeholder="fx 150" value="${existing && existing.mPer50g != null ? existing.mPer50g : ''}"></label></div>
@@ -214,10 +255,15 @@ function projectModal(existing) {
     const name = f.querySelector('#f-name').value.trim() || 'Nyt projekt';
     const yarn = f.querySelector('#f-yarn').value.trim(), needle = f.querySelector('#f-needle').value.trim(), notes = f.querySelector('#f-notes').value.trim();
     const categoryId = catSel.value && catSel.value !== '__new' ? catSel.value : null;
+    const size = f.querySelector('#f-size').value.trim(), gauge = f.querySelector('#f-gauge').value.trim(), recipient = f.querySelector('#f-recipient').value.trim();
+    const startDate = f.querySelector('#f-start').value, endDate = f.querySelector('#f-end').value;
     const gv = parseFloat(f.querySelector('#f-grams').value); const rv = parseFloat(f.querySelector('#f-runlen').value);
     const gramsUsed = Number.isFinite(gv) ? gv : null, mPer50g = Number.isFinite(rv) ? rv : null;
-    if (existing) { Object.assign(existing, { name, yarn, needle, notes, categoryId, gramsUsed, mPer50g }); delete existing.mPer100g; }
-    else { const p = { id: uid(), name, yarn, needle, notes, categoryId, gramsUsed, mPer50g, counters: [{ id: uid(), label: 'Omgange', value: 0, wrapAt: 0, repeats: 0, main: true }] }; projects.push(p); activeId = p.id; }
+    // a manual end date drives the completion date used in the status overview
+    const finishedAt = endDate ? new Date(endDate + 'T12:00').getTime() : (existing ? existing.finishedAt : undefined);
+    const fields = { name, yarn, needle, notes, categoryId, size, gauge, recipient, startDate, endDate, gramsUsed, mPer50g };
+    if (existing) { Object.assign(existing, fields); if (endDate) existing.finishedAt = finishedAt; delete existing.mPer100g; }
+    else { const p = { id: uid(), ...fields, finishedAt, counters: [{ id: uid(), label: 'Omgange', value: 0, wrapAt: 0, repeats: 0, main: true }] }; projects.push(p); activeId = p.id; }
     save(); m.close(); render();
   };
 }
@@ -267,6 +313,7 @@ function finishModal(p) {
     <p class="hint">Gem et minde om “${esc(p.name)}” — det vises i din statusoversigt.</p>
     <label class="photopick">Billede af det færdige strik (valgfrit)<input id="fin-photo" type="file" accept="image/*"></label>
     <div id="fin-prev" class="finprev" hidden></div>
+    <label>Afsluttet dato<input id="fin-date" type="date" value="${p.endDate || todayStr()}"></label>
     <div class="formsec">Garnforbrug${yarnHint} (valgfrit)</div>
     <div class="grid2"><label class="nl">Garn brugt (g)<input id="fin-grams" type="number" inputmode="numeric" min="0" placeholder="fx 350" value="${p.gramsUsed != null ? p.gramsUsed : ''}"></label><label class="nl">Løbelængde (m / 50 g)<input id="fin-runlen" type="number" inputmode="numeric" min="0" placeholder="fx 150" value="${p.mPer50g != null ? p.mPer50g : ''}"></label></div>
     <div class="form-actions"><button class="ghost cancel">Annuller</button><button class="primary ok">Gem som færdigt</button></div>`;
@@ -285,7 +332,9 @@ function finishModal(p) {
     if (Number.isFinite(gv)) p.gramsUsed = gv;
     if (Number.isFinite(rv)) p.mPer50g = rv;
     if (photoBlob) { try { const id = 'ph_' + p.id; await putPhoto({ id, blob: photoBlob, mime: photoBlob.type || 'image/jpeg', addedAt: Date.now() }); p.photoId = id; } catch (err) {} }
-    p.done = true; p.finishedAt = Date.now();
+    const dstr = f.querySelector('#fin-date').value;
+    p.endDate = dstr || todayStr();
+    p.done = true; p.finishedAt = new Date(p.endDate + 'T12:00').getTime();
     releaseWake(); activeId = null; save(); m.close(); renderList();
   };
 }

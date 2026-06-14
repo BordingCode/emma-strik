@@ -2,7 +2,7 @@
 import { store } from './store.js';
 import { allUploads, putUpload, allPhotos, putPhoto } from './idb.js';
 
-const KEYS = ['projects', 'activeProject', 'favorites', 'owned', 'collections', 'stash', 'tools', 'lastBackupAt'];
+const KEYS = ['projects', 'activeProject', 'favorites', 'owned', 'collections', 'stash', 'tools', 'videos', 'ownerName', 'lastBackupAt'];
 
 const blobToDataURL = (blob) => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = () => rej(r.error || new Error('Kunne ikke læse fil')); r.readAsDataURL(blob); });
 function dataURLToBlob(d) {
