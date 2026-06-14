@@ -126,11 +126,7 @@ function card(p) {
   const open = E('a', 'plink', p.own ? 'Åbn →' : 'Se opskrift →');
   if (p.own) {
     open.href = '#';
-    open.onclick = (e) => {
-      e.preventDefault();
-      if ((p.upload.mime || '').startsWith('image/')) openReader(p.upload);
-      else window.open(URL.createObjectURL(p.upload.blob), '_blank'); // PDF opens externally
-    };
+    open.onclick = (e) => { e.preventDefault(); openReader(p.upload); }; // image or PDF, both in the reader
   }
   else { open.href = p.url; open.target = '_blank'; open.rel = 'noopener noreferrer'; }
   const more = E('button', 'morebtn', '⋯'); more.onclick = () => actionSheet(p);

@@ -267,3 +267,8 @@ input, textarea { font-family: inherit; }
 .rc-btn { width: 54px; height: 48px; border-radius: 12px; border: none; background: var(--wool); color: #fff; font-size: 26px; }
 .rc-btn.minus { background: #3a332c; border: 1px solid #4a4138; }
 .rc-val { text-align: center; min-width: 70px; } .rc-val b { font-size: 28px; display: block; line-height: 1; } .rc-val span { font-size: 11px; color: #cdbfae; }
+
+/* reader pages (image or pdf) */
+.reader-pages { position: relative; }
+.reader-pages .rpage { display: block; width: 100%; height: auto; }
+.reader-loading { color: #cdbfae; text-align: center; padding: 40px 10px; }

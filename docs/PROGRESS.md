@@ -67,10 +67,12 @@ Counter + calculators + 64-pattern curated gallery. To grow gallery: add verifie
 - ✅ #2 Hjælpevideoer card in Beregner: verified links (Kimmie Munkholm YouTube, PetiteKnit videos, YouTube search).
 - ✅ #3 Statusoversigt: status card on Projekter (færdige/i gang/meter strikket/gram brugt) with "I år / I alt"
   period toggle; projects got optional Garn brugt (g) + Løbelængde (m/100g) → metres computed (verified 350g×300=1050m).
-- ✅ #1 In-pattern reader (js/reader.js) for her IMAGE uploads: zoom, draggable row-ruler, embedded counter,
-  highlighter/pencil/eraser annotation — annotation + counter saved per pattern in IDB. (PDF uploads still open
-  externally; pdf.js could enable in-PDF reading later.) Browser-verified: draw persists, counter persists, 0 errors.
-- SW→v11. All browser-verified on the local server.
+- ✅ #1 In-pattern reader (js/reader.js) for IMAGE **and PDF** uploads: zoom, draggable row-ruler, embedded
+  counter, highlighter/pencil/eraser annotation — annotation + counter saved per pattern in IDB.
+  PDFs render page-by-page via **vendored pdf.js** (vendor/pdf.mjs + pdf.worker.mjs, offline); one annotation
+  layer spans all pages; falls back to external open if a PDF can't render. Browser-verified: image draw+counter
+  persist; 2-page PDF renders (1000×2800 anno layer); 0 console errors.
+- SW→v12 (incl. vendored pdf.js). All browser-verified on the local server.
 
 ## Key decisions (full detail in DESIGN.md)
 Danish mobile-first PWA = knitting companion (multi-counter projects + calculators) + curated link
