@@ -17,10 +17,17 @@ export function modal(content, { onClose } = {}) {
   return { close, panel };
 }
 
+const SVG = (p, sw = 2) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
+export const ICONS = {
+  counter: SVG('<path d="M6 5v14M10 5v14M14 5v14M18 5v14"/><path d="M4 16.5 20 8.5"/>'),
+  calc: SVG('<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 7h8"/><path d="M8 12h.01M12 12h.01M16 12h.01M8 16h.01M12 16h.01M16 16h.01"/>'),
+  yarn: SVG('<circle cx="12" cy="12" r="9"/><path d="M5 9c4.5 2.2 9.5 2.2 14 0M4 13c5 3 11 3 16 0M9 3.5c-2.2 4.5-2.2 12.5 0 17M15 3.5c2.2 4.5 2.2 12.5 0 17" stroke-width="1.3"/>', 2),
+};
+
 const SECTIONS = [
-  { id: 'taeller', label: 'Tæller', icon: '🔢', init: initCounters },
-  { id: 'beregner', label: 'Beregner', icon: '🧮', init: initCalculators },
-  { id: 'opskrifter', label: 'Opskrifter', icon: '🧶', init: initGallery },
+  { id: 'taeller', label: 'Tæller', icon: ICONS.counter, init: initCounters },
+  { id: 'beregner', label: 'Beregner', icon: ICONS.calc, init: initCalculators },
+  { id: 'opskrifter', label: 'Opskrifter', icon: ICONS.yarn, init: initGallery },
 ];
 
 const app = document.getElementById('app');
@@ -28,7 +35,7 @@ const views = {};
 let current = null;
 
 function build() {
-  const header = el('header', 'topbar', `<span class="brand">Emmas&nbsp;Strik</span>`);
+  const header = el('header', 'topbar', `<span class="brandicon">${ICONS.yarn}</span><span class="brand">Emmas&nbsp;Strik</span>`);
   const main = el('main', 'view');
   const nav = el('nav', 'bottomnav');
   app.append(header, main, nav);

@@ -6,18 +6,21 @@
 }
 * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html, body { height: 100%; }
-body { background: var(--cream); color: var(--ink); font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+body { background: #ddd0bb; color: var(--ink); font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
   -webkit-user-select: none; user-select: none; }
 button { font-family: inherit; cursor: pointer; color: inherit; }
 input, textarea { font-family: inherit; }
 
-#app { display: flex; flex-direction: column; height: 100svh; }
+/* phone-first; on a wide screen it sits as a centred phone-width frame */
+#app { display: flex; flex-direction: column; height: 100svh; max-width: 600px; margin: 0 auto;
+  background: var(--cream); box-shadow: 0 0 50px rgba(60,40,20,.18); }
 
 /* top bar */
-.topbar { flex: 0 0 auto; display: flex; align-items: center; justify-content: center;
+.topbar { flex: 0 0 auto; display: flex; align-items: center; justify-content: center; gap: 9px;
   padding: 12px; background: var(--wool); color: #fff; box-shadow: var(--shadow); }
 .brand { font-size: 20px; font-weight: 700; letter-spacing: .5px; }
-.brand::before { content: '🧶 '; }
+.brandicon { display: inline-flex; }
+.brandicon svg { width: 22px; height: 22px; }
 
 /* view + pages */
 .view { flex: 1 1 auto; overflow-y: auto; -webkit-overflow-scrolling: touch; }
@@ -31,7 +34,7 @@ input, textarea { font-family: inherit; }
   padding-bottom: env(safe-area-inset-bottom, 0); }
 .navbtn { flex: 1; background: none; border: none; padding: 8px 4px 10px; display: flex; flex-direction: column;
   align-items: center; gap: 2px; color: var(--muted); }
-.navbtn .ni { font-size: 22px; } .navbtn .nl { font-size: 11px; }
+.navbtn .ni { display: flex; } .navbtn .ni svg { width: 25px; height: 25px; } .navbtn .nl { font-size: 11px; }
 .navbtn.active { color: var(--wool-dk); } .navbtn.active .ni { transform: translateY(-1px); }
 
 /* buttons */

@@ -30,9 +30,13 @@
   images load (Ravelry/PetiteKnit/DROPS hotlink OK), 0 console errors. SW→v3.
 - NOTE: never fabricated links/images; agent left unverifiable images null on purpose.
 
-## M4 — Polish  ⬜ (OPTIONAL — app is fully usable)
-- ⬜ swap nav/top emoji → inline SVG (emoji render on iOS/Android; only boxes on Linux test browser)
-- ⬜ optional desktop max-width centering for the gallery; tiny visual touches
+## M4 — Polish  ✅ DONE
+- ✅ inline SVG icons (brand yarn-ball + nav: tally / calculator / yarn) replacing all emoji — crisp on every device
+- ✅ desktop frame: #app capped at 600px, centred, soft shadow on darker wool bg (phone-first; tidy on desktop)
+- ✅ browser-verified desktop + icons render; SW→v4
+
+## 🎉 ALL MILESTONES DONE — app complete & live: https://bordingcode.github.io/emma-strik/
+Counter + calculators + 23-pattern curated gallery. To grow gallery: add verified entries to data/patterns.js.
 
 ## M4 — Polish  ⬜
 (cozy visual design, PWA/offline, icon, Bording Hub)
