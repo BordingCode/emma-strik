@@ -19,6 +19,8 @@
   (NOTE: DROPS site blocks fetch from here — WebFetch 503 / browser timeout / curl 000; secondary sources
   conflict on per-letter gauges, so did NOT bake DROPS numbers in — linked to source instead, honest.)
 - ✅ browser-verified live results all correct; 0 console errors. SW→v2.
+- ✅ (later) clarity pass: each calculator has an ⓘ info sheet (goal + "Sådan bruger du den" steps + example),
+  clearer grouped labels (Opskriftens/Din strikkefasthed). Browser-verified; SW→v7.
 
 ## M3 — Gallery  ✅ DONE
 - ✅ data/patterns.js: 64 REAL, web-verified patterns (DROPS/PetiteKnit/Tin Can Knits/Sandnes/Purl Soho/

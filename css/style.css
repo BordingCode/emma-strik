@@ -197,3 +197,16 @@ input, textarea { font-family: inherit; }
 .empty.small { padding: 14px 10px; font-size: 14px; }
 .form select { display: block; width: 100%; margin-top: 4px; background: var(--cream); border: 1px solid var(--line); border-radius: 10px; padding: 12px; font-size: 16px; color: var(--ink); }
 .form input[type=file] { display: block; width: 100%; margin-top: 4px; font-size: 14px; }
+
+/* ============ calculator info button + info sheets ============ */
+.calchead { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.calchead h2 { margin-bottom: 0; }
+.infobtn { flex: 0 0 auto; width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--line);
+  background: var(--cream); color: var(--wool-dk); font-size: 15px; line-height: 1; }
+.modal-panel { max-height: 88vh; overflow-y: auto; }
+.infobody p { color: var(--ink); font-size: 14px; line-height: 1.55; margin-bottom: 10px; }
+.infobody b { color: var(--wool-dk); }
+.infobody ol, .infobody ul { margin: 0 0 10px 20px; font-size: 14px; line-height: 1.6; color: var(--ink); }
+.infobody li { margin-bottom: 4px; }
+.infobody .ex { background: #f3efe3; border-radius: 10px; padding: 10px 12px; font-size: 13.5px; margin-top: 4px; }
+.infosheet h2 { margin-bottom: 10px; }
