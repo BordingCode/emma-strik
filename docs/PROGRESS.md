@@ -21,7 +21,7 @@
 - ✅ browser-verified live results all correct; 0 console errors. SW→v2.
 
 ## M3 — Gallery  ✅ DONE
-- ✅ data/patterns.js: 23 REAL, web-verified patterns (DROPS/PetiteKnit/Tin Can Knits/Sandnes/Purl Soho/
+- ✅ data/patterns.js: 64 REAL, web-verified patterns (DROPS/PetiteKnit/Tin Can Knits/Sandnes/Purl Soho/
   Ravelry) across sweater/accessory/baby/home; free+paid mix; DK+EN; og:image URLs where verifiable (5 null)
 - ✅ gallery.js: filter chips (category) + "Kun gratis" + "♥ Gemte" + search; cards w/ photo + tags
   (free/paid, difficulty, weight, DA/EN), credit (designer · source), "Se opskrift →" link OUT
@@ -36,7 +36,7 @@
 - ✅ browser-verified desktop + icons render; SW→v4
 
 ## 🎉 ALL MILESTONES DONE — app complete & live: https://bordingcode.github.io/emma-strik/
-Counter + calculators + 23-pattern curated gallery. To grow gallery: add verified entries to data/patterns.js.
+Counter + calculators + 64-pattern curated gallery. To grow gallery: add verified entries to data/patterns.js.
 
 ## M4 — Polish  ⬜
 (cozy visual design, PWA/offline, icon, Bording Hub)
