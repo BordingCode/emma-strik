@@ -272,3 +272,7 @@ input, textarea { font-family: inherit; }
 .reader-pages { position: relative; }
 .reader-pages .rpage { display: block; width: 100%; height: auto; }
 .reader-loading { color: #cdbfae; text-align: center; padding: 40px 10px; }
+
+/* reader ruler-toggle active state + pinch-friendly stage */
+.rbtn.rulertoggle.on { background: var(--sage); border-color: var(--sage); }
+.reader-stage { touch-action: pan-x pan-y; }
