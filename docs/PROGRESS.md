@@ -3,12 +3,13 @@
 > ▶ Resume: read this + DESIGN.md. Location ~/cc/emma-strik · repo BordingCode/emma-strik.
 > Status legend: ⬜ todo · 🔧 doing · ✅ done
 
-## M1 — Counter (the heart)  🔧 DOING
+## M1 — Counter (the heart)  ✅ DONE
 - ✅ scaffold + DESIGN/PROGRESS docs
-- ⬜ app shell: 3-section bottom-nav (Tæller / Beregner / Opskrifter), Danish, mobile-first
-- ⬜ store.js localStorage helpers
-- ⬜ counters.js: projects + multiple linked counters, big +/- taps, auto-save every tap, Wake Lock, never-lose-place
-- ⬜ browser playtest on phone viewport, commit/push, enable Pages
+- ✅ app shell: 3-section bottom-nav (Tæller / Beregner / Opskrifter), Danish, mobile-first, 100svh
+- ✅ store.js localStorage helpers
+- ✅ counters.js: projects + multiple counters (repeat-wrap + follow-main), big +/- taps, auto-save every tap, Wake Lock + re-acquire on visibilitychange
+- ✅ browser-verified (phone): create/count/multi-counter/wrap/repeat/follow all correct; persists across reload (restores to active project); 0 console errors
+- NOTE: nav/top emoji render as boxes on Linux test browser only — fine on iOS/Android (consider SVG in M4)
 
 ## M2 — Calculators  ⬜
 (distribute inc/dec evenly · gauge resize · yarn needed/substitution w/ DROPS A–F groups)

@@ -1,0 +1,91 @@
+/* Emmas Strik — cozy wool tones, mobile-first, big tap targets. */
+:root {
+  --cream: #f7f0e4; --paper: #fffdf8; --ink: #3a322e; --muted: #8a7d72; --line: #e7dcc9;
+  --wool: #c87a5b; --wool-dk: #a85f43; --sage: #7c9473; --rose: #cf9b8e; --gold: #d8a657;
+  --shadow: 0 2px 8px rgba(80,60,40,.10);
+}
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; }
+body { background: var(--cream); color: var(--ink); font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  -webkit-user-select: none; user-select: none; }
+button { font-family: inherit; cursor: pointer; color: inherit; }
+input, textarea { font-family: inherit; }
+
+#app { display: flex; flex-direction: column; height: 100svh; }
+
+/* top bar */
+.topbar { flex: 0 0 auto; display: flex; align-items: center; justify-content: center;
+  padding: 12px; background: var(--wool); color: #fff; box-shadow: var(--shadow); }
+.brand { font-size: 20px; font-weight: 700; letter-spacing: .5px; }
+.brand::before { content: '🧶 '; }
+
+/* view + pages */
+.view { flex: 1 1 auto; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+.page { padding: 16px 16px 24px; max-width: 620px; margin: 0 auto; }
+.pagehead h1 { font-size: 24px; margin-bottom: 6px; }
+.hint { color: var(--muted); font-size: 14px; line-height: 1.5; margin-bottom: 14px; }
+.empty { color: var(--muted); text-align: center; padding: 40px 10px; font-size: 16px; }
+
+/* bottom nav */
+.bottomnav { flex: 0 0 auto; display: flex; background: var(--paper); border-top: 1px solid var(--line);
+  padding-bottom: env(safe-area-inset-bottom, 0); }
+.navbtn { flex: 1; background: none; border: none; padding: 8px 4px 10px; display: flex; flex-direction: column;
+  align-items: center; gap: 2px; color: var(--muted); }
+.navbtn .ni { font-size: 22px; } .navbtn .nl { font-size: 11px; }
+.navbtn.active { color: var(--wool-dk); } .navbtn.active .ni { transform: translateY(-1px); }
+
+/* buttons */
+.primary { background: var(--wool); color: #fff; border: none; border-radius: 12px; padding: 14px;
+  font-size: 16px; font-weight: 600; box-shadow: var(--shadow); }
+.primary.big { display: block; width: 100%; margin-top: 16px; }
+.ghost { background: var(--paper); color: var(--ink); border: 1px solid var(--line); border-radius: 12px; padding: 12px; font-size: 15px; }
+.ghost.wide { display: block; width: 100%; margin-top: 10px; }
+.ghost.subtle { color: var(--muted); } .ghost.danger { color: #b5483b; border-color: #e7c4bd; }
+.iconbtn { background: none; border: none; font-size: 18px; padding: 8px; color: var(--wool-dk); }
+
+/* project list */
+.projlist { display: flex; flex-direction: column; gap: 10px; }
+.projcard { display: flex; align-items: center; justify-content: space-between; gap: 12px; text-align: left;
+  background: var(--paper); border: 1px solid var(--line); border-radius: 14px; padding: 14px; box-shadow: var(--shadow); width: 100%; }
+.pc-main b { font-size: 17px; display: block; } .pc-sub { color: var(--muted); font-size: 13px; }
+.pc-count { text-align: center; flex: 0 0 auto; } .pc-num { font-size: 26px; font-weight: 700; color: var(--wool-dk); display: block; line-height: 1; }
+.pc-lbl { font-size: 10px; color: var(--muted); }
+
+/* detail */
+.detailhead { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
+.dtitle { text-align: center; flex: 1; } .dtitle b { font-size: 17px; display: block; } .dtitle small { color: var(--muted); font-size: 12px; }
+
+.maincounter { text-align: center; background: var(--paper); border: 1px solid var(--line); border-radius: 18px;
+  padding: 18px 12px 8px; box-shadow: var(--shadow); margin-top: 6px; }
+.mc-label { color: var(--muted); font-size: 14px; letter-spacing: 1px; text-transform: uppercase; }
+.mc-value { font-size: 76px; font-weight: 800; color: var(--wool-dk); line-height: 1.05; font-variant-numeric: tabular-nums; }
+.mc-wrap { color: var(--sage); font-size: 14px; font-weight: 600; padding-bottom: 6px; }
+.mc-ctrls { display: flex; gap: 12px; margin-top: 12px; }
+.mc-btn { flex: 1; border: none; border-radius: 16px; font-size: 40px; font-weight: 700; padding: 18px 0; box-shadow: var(--shadow); }
+.mc-btn.plus { flex: 2.2; background: var(--wool); color: #fff; }
+.mc-btn.minus { background: var(--paper); color: var(--wool-dk); border: 1px solid var(--line); }
+.mc-btn:active { transform: scale(.97); }
+
+.subcounters { margin-top: 16px; display: flex; flex-direction: column; gap: 8px; }
+.subcounter { display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 8px 8px 8px 14px; }
+.subcounter.follow { background: #f3efe3; }
+.sc-info b { font-size: 15px; } .sc-val { color: var(--wool-dk); font-weight: 700; margin-left: 8px; }
+.sc-tag { display: block; font-size: 11px; color: var(--sage); }
+.sc-ctrls { display: flex; align-items: center; gap: 6px; }
+.sc-btn { width: 44px; height: 44px; border-radius: 10px; border: 1px solid var(--line); background: var(--cream); font-size: 22px; font-weight: 700; color: var(--wool-dk); }
+.sc-btn:active { transform: scale(.95); }
+.sc-del { width: 32px; height: 44px; border: none; background: none; color: var(--muted); font-size: 20px; }
+
+/* modal + forms */
+.modal-ov { position: fixed; inset: 0; background: rgba(50,40,30,.5); display: flex; align-items: flex-end; justify-content: center; z-index: 50; }
+.modal-panel { background: var(--paper); width: 100%; max-width: 620px; border-radius: 18px 18px 0 0; padding: 18px 16px calc(18px + env(safe-area-inset-bottom,0)); box-shadow: 0 -4px 20px rgba(0,0,0,.2); animation: slideup .2s ease; }
+@keyframes slideup { from { transform: translateY(30px); opacity: .6; } to { transform: none; opacity: 1; } }
+.form h2 { font-size: 19px; margin-bottom: 14px; }
+.form label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 12px; }
+.form label.check { display: flex; align-items: center; gap: 8px; color: var(--ink); font-size: 15px; }
+.form input[type=text], .form input[type=number], .form textarea { display: block; width: 100%; margin-top: 4px;
+  background: var(--cream); border: 1px solid var(--line); border-radius: 10px; padding: 12px; font-size: 16px; color: var(--ink); }
+.form input.check, .form label.check input { width: auto; }
+.form-actions { display: flex; gap: 10px; margin-top: 6px; }
+.form-actions .ghost, .form-actions .primary { flex: 1; }
