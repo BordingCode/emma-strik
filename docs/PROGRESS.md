@@ -53,6 +53,14 @@ Counter + calculators + 64-pattern curated gallery. To grow gallery: add verifie
 - ⚠️ STORAGE CAVEAT: all user data is on-device only (no backend/sync); could be lost if browser data cleared.
   Backup is the mitigation. True cross-device sync would need a paid backend (future option).
 
+## Phase 3 — refinements  ✅ DONE
+- ✅ Shop vs owned made explicit: each pattern shows ONE status — Gratis (green) / ✓ Ejet (gold) / 🛒 Køb (blue);
+  new "🛒 Til køb" filter (paid & not owned) alongside Gratis / ✓ Ejet / ♥ Gemte. Verified counts: 38 gratis / 2 ejet / 25 køb.
+- ✅ Finished projects: "✓ Marker som færdig" in project detail → moves to a "✓ Færdige projekter (N)" section;
+  "↺ Genåbn" reopens. Ongoing shown under a "🧶 Igangværende" heading. Browser-verified mark+reopen.
+- ✅ Renamed the counter tab "Tæller" → "Projekter" (nav label; internal id stays 'taeller').
+- ✅ Calculators got ⓘ info sheets earlier this phase. Browser-verified all; 0 console errors. SW→v8.
+
 ## Key decisions (full detail in DESIGN.md)
 Danish mobile-first PWA = knitting companion (multi-counter projects + calculators) + curated link
 gallery (DK/EN, credited thumbnails linking out). Don't build a pattern DB. Vanilla JS, no build,

@@ -210,3 +210,11 @@ input, textarea { font-family: inherit; }
 .infobody li { margin-bottom: 4px; }
 .infobody .ex { background: #f3efe3; border-radius: 10px; padding: 10px 12px; font-size: 13.5px; margin-top: 4px; }
 .infosheet h2 { margin-bottom: 10px; }
+
+/* ============ shop/owned status + finished projects ============ */
+.tag.ejet { background: #f6ecd4; color: #9a7320; border-color: #ead9b0; }
+.tag.kob { background: #e7eef5; color: #4f6f8f; border-color: #d2e0ee; }
+.projcard.done { opacity: .62; }
+.projcard.done .pc-num { color: var(--sage); }
+.donetick { color: var(--sage); }
+.ghost.wide.finish { color: var(--sage); border-color: #cfe0c6; }

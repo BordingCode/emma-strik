@@ -37,24 +37,35 @@ function tap(project, counter, dir) {
 /* ---------------- render ---------------- */
 function render() { if (active()) renderDetail(); else { releaseWake(); renderList(); } }
 
+function projCard(p) {
+  const main = p.counters[0];
+  const row = E('button', 'projcard' + (p.done ? ' done' : ''), `<div class="pc-main"><b>${esc(p.name)}${p.done ? ' <span class="donetick">✓</span>' : ''}</b>
+    <span class="pc-sub">${[p.yarn, p.needle].filter(Boolean).map(esc).join(' · ') || (p.done ? 'færdigt' : 'tryk for at fortsætte')}</span></div>
+    <div class="pc-count"><span class="pc-num">${main ? main.value : 0}</span><span class="pc-lbl">omg.</span></div>`);
+  row.onclick = () => { activeId = p.id; save(); if (!p.done) requestWake(); renderDetail(); };
+  return row;
+}
+
 function renderList() {
   node.innerHTML = '';
-  const head = E('div', 'pagehead', `<h1>Dine projekter</h1><p class="hint">Tæl omgange uden at miste tællingen — skærmen forbliver tændt mens du strikker.</p>`);
-  node.append(head);
+  node.append(E('div', 'pagehead', `<h1>Dine projekter</h1><p class="hint">Tæl omgange uden at miste tællingen — skærmen forbliver tændt mens du strikker.</p>`));
+  const active = projects.filter((p) => !p.done);
+  const done = projects.filter((p) => p.done);
   if (!projects.length) node.append(E('p', 'empty', 'Ingen projekter endnu. Start dit første herunder. 🧶'));
+  if (active.length) node.append(E('h2', 'sechead', '🧶 Igangværende'));
+  else if (projects.length) node.append(E('p', 'empty small', 'Ingen igangværende projekter — alt er færdigt! 🎉'));
   const list = E('div', 'projlist');
-  projects.forEach((p) => {
-    const main = p.counters[0];
-    const row = E('button', 'projcard', `<div class="pc-main"><b>${esc(p.name)}</b>
-      <span class="pc-sub">${[p.yarn, p.needle].filter(Boolean).map(esc).join(' · ') || 'tryk for at fortsætte'}</span></div>
-      <div class="pc-count"><span class="pc-num">${main ? main.value : 0}</span><span class="pc-lbl">omg.</span></div>`);
-    row.onclick = () => { activeId = p.id; save(); requestWake(); renderDetail(); };
-    list.append(row);
-  });
+  active.forEach((p) => list.append(projCard(p)));
   node.append(list);
   const add = E('button', 'primary big', '+ Nyt projekt');
   add.onclick = () => projectModal();
   node.append(add);
+  if (done.length) {
+    node.append(E('h2', 'sechead', `✓ Færdige projekter (${done.length})`));
+    const dl = E('div', 'projlist');
+    done.forEach((p) => dl.append(projCard(p)));
+    node.append(dl);
+  }
 }
 
 function renderDetail() {
@@ -100,9 +111,15 @@ function renderDetail() {
   }
 
   const addc = E('button', 'ghost wide', '+ Tilføj tæller'); addc.onclick = () => counterModal(p);
+  const doneBtn = E('button', 'ghost wide ' + (p.done ? '' : 'finish'), p.done ? '↺ Genåbn projekt' : '✓ Marker som færdig');
+  doneBtn.onclick = () => {
+    p.done = !p.done;
+    if (p.done) { p.finishedAt = Date.now(); releaseWake(); save(); activeId = null; renderList(); }
+    else { delete p.finishedAt; save(); renderDetail(); }
+  };
   const reset = E('button', 'ghost wide subtle', '↺ Nulstil alle tællere'); reset.onclick = () => { if (confirm('Nulstil alle tællere i dette projekt?')) { p.counters.forEach((c) => { c.value = c.wrapAt ? 1 : 0; c.repeats = 0; }); save(); renderDetail(); } };
   const delp = E('button', 'ghost wide danger', '🗑 Slet projekt'); delp.onclick = () => { if (confirm('Slet projektet "' + p.name + '"?')) { projects = projects.filter((x) => x !== p); activeId = null; save(); releaseWake(); renderList(); } };
-  node.append(addc, reset, delp);
+  node.append(addc, doneBtn, reset, delp);
 }
 
 /* ---------------- modals ---------------- */

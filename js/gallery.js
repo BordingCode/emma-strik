@@ -12,7 +12,7 @@ const urlCache = new Map();
 
 export async function initGallery(container, helpers) {
   node = container; M = helpers.modal;
-  filters = { cat: 'all', freeOnly: false, favOnly: false, ownedOnly: false, collection: null, q: '' };
+  filters = { cat: 'all', freeOnly: false, favOnly: false, ownedOnly: false, buyOnly: false, collection: null, q: '' };
   favs = new Set(store.get('favorites', []));
   owned = new Set(store.get('owned', []));
   collections = store.get('collections', []);
@@ -66,7 +66,7 @@ function render() {
 
   const toggles = E('div', 'gtoggles');
   const mk = (label, key) => { const b = E('button', 'toggle' + (filters[key] ? ' on' : ''), label); b.onclick = () => { filters[key] = !filters[key]; render(); }; return b; };
-  toggles.append(mk('Kun gratis', 'freeOnly'), mk('♥ Gemte', 'favOnly'), mk('✓ Ejet', 'ownedOnly'));
+  toggles.append(mk('Gratis', 'freeOnly'), mk('✓ Ejet', 'ownedOnly'), mk('🛒 Til køb', 'buyOnly'), mk('♥ Gemte', 'favOnly'));
 
   ctr.append(top, chips, colRow, toggles);
   node.append(ctr);
@@ -80,9 +80,10 @@ function regrid() {
   const col = filters.collection ? collections.find((c) => c.id === filters.collection) : null;
   const list = allCards().filter((p) =>
     (filters.cat === 'all' || (filters.cat === 'mine' ? !!p.own : p.category === filters.cat)) &&
-    (!filters.freeOnly || p.free) &&
+    (!filters.freeOnly || (p.free && !isOwned(p))) &&
     (!filters.favOnly || favs.has(p.id)) &&
     (!filters.ownedOnly || isOwned(p)) &&
+    (!filters.buyOnly || (!p.free && !isOwned(p))) &&
     (!col || (col.items || []).includes(p.id)) &&
     (!filters.q || (p.name + ' ' + p.designer + ' ' + p.source).toLowerCase().includes(filters.q)));
   grid.innerHTML = '';
@@ -101,13 +102,15 @@ function card(p) {
   const thumb = E('div', 'thumb t-' + p.category, `<span class="ph">${p.own ? '📄' : (CAT_ICON[p.category] || '🧶')}</span>`);
   if (p.image) { const img = E('img'); img.loading = 'lazy'; img.alt = p.name; img.src = p.image; img.onerror = () => img.remove(); thumb.append(img); }
   if (p.own) thumb.append(E('span', 'mybadge', 'Min'));
-  else if (isOwned(p)) thumb.append(E('span', 'ownbadge', '✓ Ejet'));
   const fav = E('button', 'favbtn' + (favs.has(p.id) ? ' on' : ''), favs.has(p.id) ? '♥' : '♡');
   fav.onclick = () => { favs.has(p.id) ? favs.delete(p.id) : favs.add(p.id); saveFavs(); fav.classList.toggle('on'); fav.textContent = favs.has(p.id) ? '♥' : '♡'; if (filters.favOnly) regrid(); };
   thumb.append(fav);
 
+  const status = isOwned(p) ? '<span class="tag ejet">✓ Ejet</span>'
+    : p.free ? '<span class="tag free">Gratis</span>'
+    : '<span class="tag kob">🛒 Køb</span>';
   const tags = E('div', 'ptags');
-  tags.innerHTML = `${p.free ? '<span class="tag free">Gratis</span>' : '<span class="tag paid">Betalt</span>'}
+  tags.innerHTML = `${status}
     ${p.difficulty ? `<span class="tag">${DIFF[p.difficulty] || p.difficulty}</span>` : ''}
     ${p.yarnWeight ? `<span class="tag">${p.yarnWeight}</span>` : ''}
     <span class="tag lang">${p.lang === 'da' ? 'DA' : 'EN'}</span>`;
