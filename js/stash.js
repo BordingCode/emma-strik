@@ -21,7 +21,7 @@ function render() {
   node.append(E('div', 'pagehead', `<h1>Garn &amp; grej</h1><p class="hint">Hold styr på dit garnlager og dine pinde.</p>`));
 
   // ---- garn ----
-  node.append(E('h2', 'sechead', '🧶 Garnlager'));
+  node.append(E('h2', 'sechead', 'Garnlager'));
   if (!stash.length) node.append(E('p', 'empty small', 'Intet garn noteret endnu.'));
   const sl = E('div', 'invlist');
   stash.forEach((g) => {
@@ -34,7 +34,7 @@ function render() {
   const addY = E('button', 'ghost wide', '+ Tilføj garn'); addY.onclick = () => yarnModal(); node.append(addY);
 
   // ---- grej ----
-  node.append(E('h2', 'sechead', '🪡 Pinde & grej'));
+  node.append(E('h2', 'sechead', 'Pinde & grej'));
   if (!tools.length) node.append(E('p', 'empty small', 'Intet grej noteret endnu.'));
   const tl = E('div', 'invlist');
   tools.forEach((t) => {
@@ -47,13 +47,18 @@ function render() {
   const addT = E('button', 'ghost wide', '+ Tilføj grej'); addT.onclick = () => toolModal(); node.append(addT);
 
   // ---- backup (was hidden behind the gear icon; now clearly here too) ----
-  node.append(E('h2', 'sechead', '💾 Sikkerhedskopi'));
+  node.append(E('h2', 'sechead', 'Sikkerhedskopi'));
   node.append(E('p', 'hint', 'Alt du tilføjer gemmes kun på denne telefon. Lav en sikkerhedskopi, så du ikke mister det — og kan flytte det til en anden enhed.'));
-  const exp = E('button', 'ghost wide', '⬇ Gem sikkerhedskopi');
-  exp.onclick = async () => { exp.textContent = 'Gemmer…'; try { await exportData(); } catch (e) { alert('Kunne ikke gemme.'); } exp.textContent = '⬇ Gem sikkerhedskopi'; };
-  const imp = E('label', 'ghost wide', '⬆ Gendan fra fil');
+  const exp = E('button', 'ghost wide', 'Gem sikkerhedskopi');
+  exp.onclick = async () => { exp.textContent = 'Gemmer…'; try { await exportData(); } catch (e) { alert('Kunne ikke gemme.'); } exp.textContent = 'Gem sikkerhedskopi'; };
+  const imp = E('label', 'ghost wide', 'Gendan fra fil');
   const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'application/json'; inp.style.display = 'none';
-  inp.onchange = async () => { if (!inp.files[0]) return; try { await importData(inp.files[0]); alert('Gendannet! Appen genindlæses.'); location.reload(); } catch (e) { alert('Kunne ikke gendanne: ' + e.message); } };
+  inp.onchange = async () => {
+    if (!inp.files[0]) return;
+    if (!confirm('Dette ERSTATTER dine nuværende projekter, kategorier og lager med indholdet fra filen. Fortsæt?')) { inp.value = ''; return; }
+    try { const r = await importData(inp.files[0]); alert('Gendannet ✓' + (r.failed ? ` (${r.restored} opskrifter gendannet, ${r.failed} kunne ikke)` : '') + '. Appen genindlæses.'); location.reload(); }
+    catch (e) { alert('Kunne ikke gendanne: ' + e.message); }
+  };
   imp.append(inp);
   node.append(exp, imp);
 }

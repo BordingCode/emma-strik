@@ -13,7 +13,7 @@ export const PATTERNS = [
   { id: 'sunday', name: 'Sunday Sweater', designer: 'PetiteKnit', source: 'PetiteKnit',
     url: 'https://www.petiteknit.com/en/products/sunday-sweater',
     image: 'https://www.petiteknit.com/cdn/shop/files/sundaysweaterspartakus4_grande.jpg?v=1740472577',
-    category: 'sweater', yarnWeight: 'Lace', difficulty: 'let øvet', free: false, lang: 'da' },
+    category: 'sweater', yarnWeight: 'Fingering', difficulty: 'let øvet', free: false, lang: 'da' },
   { id: 'drops-213-25', name: 'September Story (DROPS 213-25)', designer: 'DROPS Design', source: 'DROPS',
     url: 'https://www.garnstudio.com/pattern.php?id=9551&cid=19',
     image: 'https://images.garnstudio.com/drops/mag/213/25/25-2.jpg',

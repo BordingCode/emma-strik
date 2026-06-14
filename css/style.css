@@ -1,7 +1,7 @@
 /* Emmas Strik — cozy wool tones, mobile-first, big tap targets. */
 :root {
-  --cream: #f7f0e4; --paper: #fffdf8; --ink: #3a322e; --muted: #8a7d72; --line: #e7dcc9;
-  --wool: #c87a5b; --wool-dk: #a85f43; --sage: #7c9473; --rose: #cf9b8e; --gold: #d8a657;
+  --cream: #f7f0e4; --paper: #fffdf8; --ink: #3a322e; --muted: #6f6358; --line: #e7dcc9;
+  --wool: #a85f43; --wool-dk: #8f4d36; --sage: #5f7a57; --rose: #cf9b8e; --gold: #d8a657;
   --shadow: 0 2px 8px rgba(80,60,40,.10);
 }
 * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -289,3 +289,21 @@ input, textarea { font-family: inherit; }
 .emptymine .primary, .emptymine .ghost { display: block; width: 100%; max-width: 320px; margin: 8px auto; }
 .rbtn.lbl { display: inline-flex; flex-direction: column; align-items: center; gap: 1px; padding: 5px 8px; line-height: 1.1; }
 .rbtn.lbl span { font-size: 16px; } .rbtn.lbl small { font-size: 9px; opacity: .85; }
+
+/* ============ accessibility + polish (critique pass) ============ */
+:focus-visible { outline: 3px solid var(--wool-dk); outline-offset: 2px; }
+.chips { -webkit-mask-image: linear-gradient(90deg, #000 92%, transparent); mask-image: linear-gradient(90deg, #000 92%, transparent); }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+/* gold owned-tag uses dark text for contrast (already), ensure 'on' states keep white on darker fills (tokens darkened) */
+
+/* backup reminder bar */
+.backupbar { display: flex; align-items: center; gap: 8px; background: #f6ecd4; border-bottom: 1px solid #ead9b0; padding: 8px 12px; font-size: 13px; color: #6a5326; }
+.backupbar span { flex: 1; }
+.bb-go { flex: 0 0 auto; background: var(--wool); color: #fff; border: none; border-radius: 8px; padding: 6px 12px; font-size: 13px; font-weight: 600; }
+.bb-x { flex: 0 0 auto; background: none; border: none; color: #9a7320; font-size: 14px; padding: 4px 6px; }
+
+/* SVG icon sizing for swapped-in icons */
+.thumb .ph svg { width: 48px; height: 48px; }
+.thumb .ph { color: var(--wool-dk); }
+.rbtn.lbl span svg { width: 18px; height: 18px; }
+.infobtn svg { width: 17px; height: 17px; vertical-align: middle; }

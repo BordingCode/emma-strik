@@ -3,8 +3,9 @@
 import { PATTERNS, CATEGORIES, CAT_ICON } from '../data/patterns.js';
 import { store, uid } from './store.js';
 import { allUploads, putUpload, delUpload } from './idb.js';
-import { CAT_ICONS, ICON_GROUPS, DEFAULT_ICON } from './caticons.js';
+import { CAT_ICONS, ICON_GROUPS, DEFAULT_ICON, catThumb } from './caticons.js';
 import { openReader } from './reader.js';
+import { pdfThumb } from './pdfthumb.js';
 
 const E = (t, c, h) => { const e = document.createElement(t); if (c) e.className = c; if (h != null) e.innerHTML = h; return e; };
 const DIFF = { 'begynder': '● Begynder', 'let øvet': '●● Let øvet', 'øvet': '●●● Øvet' };
@@ -22,6 +23,10 @@ export async function initGallery(container, helpers) {
   uploads = [];
   try { uploads = await allUploads(); } catch (e) {}
   render();
+  // backfill PDF first-page thumbnails for older uploads that don't have one yet
+  uploads.filter((u) => !u.thumb && (u.mime || '').includes('pdf')).forEach(async (u) => {
+    try { u.thumb = await pdfThumb(u.blob); await putUpload(u); render(); } catch (e) {}
+  });
 }
 
 const saveFavs = () => store.set('favorites', [...favs]);
@@ -32,6 +37,7 @@ function uploadCard(u) {
   const isImg = (u.mime || '').startsWith('image/');
   let img = null;
   if (isImg) { if (!urlCache.has(u.id)) urlCache.set(u.id, URL.createObjectURL(u.blob)); img = urlCache.get(u.id); }
+  else if (u.thumb) img = u.thumb; // PDF first-page thumbnail
   return { id: 'up:' + u.id, name: u.name, designer: u.designer || 'Egen opskrift', source: 'Min',
     url: null, image: img, category: u.category || 'sweater', yarnWeight: null, difficulty: null,
     free: true, lang: 'da', own: true, upload: u };
@@ -46,14 +52,14 @@ function render() {
   // view switch
   const seg = E('div', 'viewseg');
   ['mine', 'browse'].forEach((v) => {
-    const b = E('button', 'segbtn' + (filters.view === v ? ' on' : ''), v === 'mine' ? '🧶 Mine opskrifter' : '🔎 Find nye');
+    const b = E('button', 'segbtn' + (filters.view === v ? ' on' : ''), v === 'mine' ? 'Mine opskrifter' : 'Find nye');
     b.onclick = () => { filters.view = v; filters.collection = null; filters.cat = 'all'; render(); };
     seg.append(b);
   });
   node.append(seg);
 
   const ctr = E('div', 'gctrls');
-  const search = E('input', 'gsearch'); search.type = 'search'; search.placeholder = '🔍 Søg…'; search.value = filters.q;
+  const search = E('input', 'gsearch'); search.type = 'search'; search.placeholder = 'Søg…'; search.value = filters.q;
   search.oninput = () => { filters.q = search.value.trim().toLowerCase(); regrid(); };
 
   if (filters.view === 'mine') {
@@ -92,7 +98,7 @@ function render() {
     ctr.append(chips);
     const toggles = E('div', 'gtoggles');
     const mk = (label, key) => { const b = E('button', 'toggle' + (filters[key] ? ' on' : ''), label); b.onclick = () => { filters[key] = !filters[key]; render(); }; return b; };
-    toggles.append(mk('Gratis', 'freeOnly'), mk('🛒 Til køb', 'buyOnly'));
+    toggles.append(mk('Gratis', 'freeOnly'), mk('Til køb', 'buyOnly'));
     ctr.append(toggles);
   }
   node.append(ctr);
@@ -130,7 +136,7 @@ function emptyMsg() {
     const wrap = E('div', 'emptymine');
     wrap.innerHTML = `<p class="empty">${filters.collection ? 'Kategorien er tom endnu.' : filters.mine === 'gemte' ? 'Ingen gemte endnu — tryk ♥ på en opskrift.' : 'Du har ingen opskrifter her endnu.'}</p>`;
     const b1 = E('button', 'primary', '+ Tilføj egen opskrift'); b1.onclick = uploadModal;
-    const b2 = E('button', 'ghost', '🔎 Find nye opskrifter'); b2.onclick = () => { filters.view = 'browse'; render(); };
+    const b2 = E('button', 'ghost', 'Find nye opskrifter'); b2.onclick = () => { filters.view = 'browse'; render(); };
     wrap.append(b1, b2);
     return wrap;
   }
@@ -139,12 +145,12 @@ function emptyMsg() {
 
 function statusTag(p) {
   if (isOwned(p)) return '<span class="tag ejet">✓ Ejet</span>';
-  return p.free ? '<span class="tag free">Gratis</span>' : '<span class="tag kob">🛒 Køb</span>';
+  return p.free ? '<span class="tag free">Gratis</span>' : '<span class="tag kob">Køb</span>';
 }
 
 function card(p) {
   const a = E('article', 'pcard');
-  const thumb = E('div', 'thumb t-' + p.category, `<span class="ph">${p.own ? '📄' : (CAT_ICON[p.category] || '🧶')}</span>`);
+  const thumb = E('div', 'thumb t-' + p.category, `<span class="ph">${p.own ? CAT_ICONS.doc : catThumb(p.category)}</span>`);
   if (p.image) { const img = E('img'); img.loading = 'lazy'; img.alt = p.name; img.src = p.image; img.onerror = () => img.remove(); thumb.append(img); }
   if (p.own) thumb.append(E('span', 'mybadge', 'Min'));
   const fav = E('button', 'favbtn' + (favs.has(p.id) ? ' on' : ''), favs.has(p.id) ? '♥' : '♡');
@@ -179,11 +185,11 @@ function card(p) {
 function actionSheet(p) {
   const f = E('div', 'sheet', `<h2>${esc(p.name)}</h2>`);
   const list = E('div', 'sheetacts');
-  const cb = E('button', 'sheetbtn', '📁 Føj til kategori…'); cb.onclick = () => { m.close(); collectionPicker(p); };
+  const cb = E('button', 'sheetbtn', 'Føj til kategori…'); cb.onclick = () => { m.close(); collectionPicker(p); };
   list.append(cb);
   if (p.own) {
     const del = E('button', 'sheetbtn danger', '🗑 Slet egen opskrift');
-    del.onclick = async () => { if (confirm('Slet din opskrift “' + p.name + '”?')) { await delUpload(p.upload.id); urlCache.delete(p.upload.id); uploads = uploads.filter((u) => u.id !== p.upload.id); m.close(); render(); } };
+    del.onclick = async () => { if (confirm('Slet din opskrift “' + p.name + '”?')) { await delUpload(p.upload.id); const cu = urlCache.get(p.upload.id); if (cu) URL.revokeObjectURL(cu); urlCache.delete(p.upload.id); uploads = uploads.filter((u) => u.id !== p.upload.id); m.close(); render(); } };
     list.append(del);
   }
   const cancel = E('button', 'sheetbtn subtle', 'Luk'); cancel.onclick = () => m.close();
@@ -241,6 +247,7 @@ function uploadModal() {
     if (!file) { alert('Vælg en fil først.'); return; }
     const name = f.querySelector('#up-name').value.trim() || file.name.replace(/\.[^.]+$/, '');
     const rec = { id: uid(), name, designer: f.querySelector('#up-designer').value.trim(), category: f.querySelector('#up-cat').value, mime: file.type || 'application/octet-stream', blob: file, addedAt: Date.now() };
+    if ((rec.mime || '').includes('pdf')) { try { rec.thumb = await pdfThumb(file); } catch (e) {} }
     try { await putUpload(rec); uploads.push(rec); m.close(); filters.view = 'mine'; filters.mine = 'all'; render(); }
     catch (e) { alert('Kunne ikke gemme filen (måske er den for stor til din browsers lager).'); }
   };

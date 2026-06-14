@@ -20,7 +20,12 @@ export const CAT_ICONS = {
   baby:     S('<path d="M9 4 5 7l2 3 2-1.4V16H8v4h8v-4h-1V8.6l2 1.4 2-3-4-3q-3 2-6 0z"/>'),
   bag:      S('<path d="M6.5 9h11l-1 11h-9z"/><path d="M9.5 9q0-4 2.5-4t2.5 4"/>'),
   yarn:     S('<circle cx="12" cy="12" r="8"/><path d="M5.5 9.5q6.5 3 13 0M4.5 13q7.5 4 15 0M9.5 4.5q-3 6.5 0 15M14.5 4.5q3 6.5 0 15" stroke-width="1.1"/>'),
+  doc:      S('<path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4"/><path d="M9.5 12h5M9.5 15.5h5"/>'),
 };
+
+// Icon for a pattern card placeholder, by built-in pattern category.
+const THUMB = { sweater: 'sweater', accessory: 'scarf', baby: 'baby', home: 'blanket' };
+export const catThumb = (category) => CAT_ICONS[THUMB[category]] || CAT_ICONS.yarn;
 
 // Grouped for the picker UI.
 export const ICON_GROUPS = [

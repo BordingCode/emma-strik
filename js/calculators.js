@@ -38,7 +38,7 @@ function card(title, sub, infoHtml) {
   const c = E('section', 'calc');
   const head = E('div', 'calchead');
   head.append(E('h2', null, title));
-  const info = E('button', 'infobtn', 'ⓘ');
+  const info = E('button', 'infobtn', '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><path d="M12 7.5h.01"/></svg>');
   info.setAttribute('aria-label', 'Sådan virker den');
   info.onclick = () => openInfo(title, infoHtml);
   head.append(info);
@@ -153,7 +153,7 @@ function substGuide() {
     `<p><b>Hvad er den til?</b> En oversigt der hjælper dig med at vælge et garn, der opfører sig som det i opskriften — så størrelsen passer.</p>
      <p><b>Tommelfingerregel:</b> Vælg et garn med <b>samme strikkefasthed</b> (samme antal masker pr. 10 cm) og nogenlunde samme pindestørrelse som opskriftens. Så er du på sikker grund.</p>
      <p>DROPS sorterer garn i 6 tykkelsesgrupper <b>A–F</b> (A tyndest, F tykkest). Garn i samme gruppe kan erstatte hinanden. Tryk på linket for DROPS’ præcise tal.</p>`);
-  const rows = [['Tyndt / Lace', 'ca. 30–34', '2–3'], ['Fingering / Sokkegarn', 'ca. 26–30', '2,5–3,5'], ['Sport', 'ca. 24–26', '3–3,5'], ['DK', 'ca. 22–24', '3,5–4,5'], ['Aran / Worsted', 'ca. 18–20', '4,5–5,5'], ['Tykt / Chunky', 'ca. 14–17', '5,5–7'], ['Ekstra tykt', 'ca. 8–12', '7–12']];
+  const rows = [['Tyndt / Lace', 'ca. 33–40', '2–3'], ['Fingering / Sokkegarn', 'ca. 27–32', '2,25–3,25'], ['Sport', 'ca. 24–26', '3–3,5'], ['DK', 'ca. 22–24', '3,5–4,5'], ['Aran / Worsted', 'ca. 18–20', '4,5–5,5'], ['Tykt / Chunky', 'ca. 12–15', '5,5–8'], ['Ekstra tykt', 'ca. 7–11', '8–12']];
   c.append(E('div', null, `<table class="wtbl"><thead><tr><th>Type</th><th>M/10 cm</th><th>Pind (mm)</th></tr></thead><tbody>${rows.map((r) => `<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td></tr>`).join('')}</tbody></table>`));
   c.append(E('a', 'srclink', 'DROPS garngrupper A–F →')); c.lastChild.href = 'https://www.garnstudio.com/yarn-groups.php?cid=17'; c.lastChild.target = '_blank'; c.lastChild.rel = 'noopener';
   return c;

@@ -5,10 +5,22 @@ import { putUpload } from './idb.js';
 
 const E = (t, c, h) => { const e = document.createElement(t); if (c) e.className = c; if (h != null) e.innerHTML = h; return e; };
 const RENDER_W = 1000;
+const RS = (p) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
+const RI = {
+  ruler: RS('<rect x="3" y="8.5" width="18" height="7" rx="1"/><path d="M7 8.5v3M11 8.5v4M15 8.5v3M19 8.5v4"/>'),
+  marker: RS('<path d="M4 20h5"/><path d="M9.5 15 15 9.5l3 3L12.5 18H9.5z"/><path d="M14 8.5 17 5.5l2 2-3 3"/>'),
+  pencil: RS('<path d="M5 19l1.2-4L15 6.2l2.8 2.8L9 17.8z"/><path d="M14 7l3 3"/>'),
+  eraser: RS('<path d="M8 17 4.5 13.5 12 6l4.5 4.5L11.5 17z"/><path d="M6 19h11"/>'),
+  trash: RS('<path d="M5 7h14M9.5 7V5h5v2M7 7l1 12h8l1-12"/>'),
+};
 
-export async function openReader(upload) {
+// progress (optional) = { obj, save } — where the row-count + ruler/scroll/zoom are remembered.
+// From a project it's the project (so the same recipe tracks separately per project); from the
+// gallery it defaults to the pattern itself. Annotations always live on the pattern (upload).
+export async function openReader(upload, progress) {
+  progress = progress || { obj: upload, save: () => putUpload(upload) };
   const ov = E('div', 'reader');
-  let mode = 'pan', scale = 1, count = upload.readerCount || 0;
+  let mode = 'pan', scale = 1, count = progress.obj.readerCount || 0;
   let rulerFrac = 0.12;   // ruler position as a fraction of content height (so it survives zoom)
 
   ov.innerHTML = `
@@ -16,13 +28,13 @@ export async function openReader(upload) {
       <button class="rbtn close">‹ Luk</button>
       <span class="rtitle">${(upload.name || 'Opskrift').replace(/[<>&]/g, '')}</span>
       <div class="rtools">
-        <button class="rbtn lbl rulertoggle"><span>📏</span><small>Lineal</small></button>
-        <button class="rbtn lbl tool" data-m="hi"><span>🖊️</span><small>Marker</small></button>
-        <button class="rbtn lbl tool" data-m="pen"><span>✏️</span><small>Blyant</small></button>
-        <button class="rbtn lbl tool" data-m="eraser"><span>🧽</span><small>Slet</small></button>
-        <button class="rbtn lbl zout"><span>−</span><small>Zoom</small></button>
-        <button class="rbtn lbl zin"><span>＋</span><small>Zoom</small></button>
-        <button class="rbtn lbl clear"><span>🗑</span><small>Ryd</small></button>
+        <button class="rbtn lbl rulertoggle" aria-label="Lineal"><span>${RI.ruler}</span><small>Lineal</small></button>
+        <button class="rbtn lbl tool" data-m="hi" aria-label="Overstregning"><span>${RI.marker}</span><small>Marker</small></button>
+        <button class="rbtn lbl tool" data-m="pen" aria-label="Blyant"><span>${RI.pencil}</span><small>Blyant</small></button>
+        <button class="rbtn lbl tool" data-m="eraser" aria-label="Viskelæder"><span>${RI.eraser}</span><small>Slet</small></button>
+        <button class="rbtn lbl zout" aria-label="Zoom ud"><span>−</span><small>Zoom</small></button>
+        <button class="rbtn lbl zin" aria-label="Zoom ind"><span>＋</span><small>Zoom</small></button>
+        <button class="rbtn lbl clear" aria-label="Ryd tegning"><span>${RI.trash}</span><small>Ryd</small></button>
       </div>
     </div>
     <div class="reader-stage">
@@ -83,6 +95,15 @@ export async function openReader(upload) {
   canvas.width = content.w; canvas.height = content.h;
   if (upload.anno) { const a = new Image(); a.onload = () => ctx.drawImage(a, 0, 0, canvas.width, canvas.height); a.src = upload.anno; }
   applyScale();
+  // resume where she left off last time (per project when opened from one)
+  const rv = progress.obj.readerView;
+  if (rv) {
+    if (rv.scale) scale = Math.max(1, Math.min(4, rv.scale));
+    if (typeof rv.rulerFrac === 'number') rulerFrac = rv.rulerFrac;
+    if (rv.rulerShown) { ruler.hidden = false; const rb = ov.querySelector('.rulertoggle'); if (rb) rb.classList.add('on'); }
+    applyScale();
+    requestAnimationFrame(() => { stage.scrollTop = (rv.scrollFrac || 0) * wrap.offsetHeight; });
+  }
 
   // tools (pen/hi/eraser are exclusive draw modes; ruler is an independent toggle)
   function setMode(m) {
@@ -138,8 +159,16 @@ export async function openReader(upload) {
     const p = pos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y);
   });
   canvas.addEventListener('pointermove', (e) => { if (!drawing || ptrs.size > 1) return; const p = pos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); });
-  const endDraw = () => { drawing = false; };
+  const endDraw = () => { if (drawing) { drawing = false; saveState(); } };
   canvas.addEventListener('pointerup', endDraw); canvas.addEventListener('pointercancel', endDraw);
+
+  // persist annotation + count + reading position (debounced) so you resume where you left off
+  let saveT;
+  function viewState() { return { scrollFrac: stage.scrollTop / (wrap.offsetHeight || 1), scale, rulerFrac, rulerShown: !ruler.hidden }; }
+  function persist() { upload.anno = canvas.toDataURL('image/png'); progress.obj.readerCount = count; progress.obj.readerView = viewState(); }
+  async function commit() { try { persist(); await putUpload(upload); if (progress.obj !== upload) progress.save(); } catch (e) {} }
+  function saveState() { clearTimeout(saveT); saveT = setTimeout(commit, 700); }
+  stage.addEventListener('scroll', saveState);
 
   // draggable ruler (position stored as a fraction so it stays put when zooming)
   ruler.style.top = '40px';
@@ -149,11 +178,13 @@ export async function openReader(upload) {
   ruler.addEventListener('pointerup', () => { rdrag = false; });
 
   // counter
-  ov.querySelector('.plus').onclick = () => { count++; cntEl.textContent = count; };
-  ov.querySelector('.minus').onclick = () => { count = Math.max(0, count - 1); cntEl.textContent = count; };
+  ov.querySelector('.plus').onclick = () => { count++; cntEl.textContent = count; saveState(); };
+  ov.querySelector('.minus').onclick = () => { count = Math.max(0, count - 1); cntEl.textContent = count; saveState(); };
 
   async function close() {
-    try { upload.anno = canvas.toDataURL('image/png'); upload.readerCount = count; await putUpload(upload); } catch (e) {}
+    clearTimeout(saveT);
+    removeEventListener('resize', placeRuler);
+    await commit();
     objURLs.forEach((u) => URL.revokeObjectURL(u)); ov.remove();
   }
   ov.querySelector('.close').onclick = close;

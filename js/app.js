@@ -3,7 +3,8 @@ import { initCounters } from './counters.js';
 import { initCalculators } from './calculators.js';
 import { initGallery } from './gallery.js';
 import { initStash } from './stash.js';
-import { exportData, importData } from './backup.js';
+import { exportData } from './backup.js';
+import { store } from './store.js';
 
 export const el = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; };
 
@@ -41,7 +42,6 @@ let current = null;
 
 function build() {
   const header = el('header', 'topbar', `<span class="brandicon">${ICONS.yarn}</span><span class="brand">Emmas&nbsp;Strik</span>`);
-  const gear = el('button', 'gearbtn', ICONS.gear); gear.onclick = backupSheet; header.append(gear);
   const main = el('main', 'view');
   const nav = el('nav', 'bottomnav');
   app.append(header, main, nav);
@@ -68,21 +68,26 @@ function show(id) {
   window.__es && (window.__es.current = id);
 }
 
-function backupSheet() {
-  const f = el('div', 'sheet', `<h2>Sikkerhedskopi</h2>
-    <p class="hint" style="margin-bottom:12px">Alt du tilføjer (egne opskrifter, samlinger, lager, projekter) gemmes kun på denne telefon. Lav en sikkerhedskopi, så du ikke mister det — og kan flytte det til en anden enhed.</p>`);
-  const acts = el('div', 'sheetacts');
-  const exp = el('button', 'sheetbtn', '⬇ Gem sikkerhedskopi');
-  exp.onclick = async () => { exp.textContent = 'Gemmer…'; try { await exportData(); } catch (e) { alert('Kunne ikke eksportere.'); } exp.textContent = '⬇ Gem sikkerhedskopi'; };
-  const imp = el('label', 'sheetbtn', '⬆ Gendan fra fil');
-  const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'application/json'; inp.style.display = 'none';
-  inp.onchange = async () => { if (!inp.files[0]) return; try { await importData(inp.files[0]); alert('Gendannet! Appen genindlæses.'); location.reload(); } catch (e) { alert('Kunne ikke gendanne: ' + e.message); } };
-  imp.append(inp);
-  const cancel = el('button', 'sheetbtn subtle', 'Luk'); cancel.onclick = () => m.close();
-  acts.append(exp, imp, cancel); f.append(acts);
-  const m = modal(f);
+// Ask the browser to keep our data (helps resist iOS eviction). Best-effort.
+async function requestPersist() { try { if (navigator.storage && navigator.storage.persist && !(await navigator.storage.persisted())) await navigator.storage.persist(); } catch (e) {} }
+
+// Gentle reminder to back up if there's data and it's been a while / never.
+function maybeBackupReminder() {
+  const hasData = (store.get('projects', []).length || store.get('collections', []).length || store.get('stash', []).length);
+  if (!hasData) return;
+  const last = store.get('lastBackupAt', 0);
+  const snooze = store.get('backupSnooze', 0);
+  const DAY = 86400000;
+  if (Date.now() - snooze < 14 * DAY) return;
+  if (last && Date.now() - last < 30 * DAY) return;
+  const bar = el('div', 'backupbar', `<span>Husk en sikkerhedskopi, så du ikke mister dine ting.</span>`);
+  const go = el('button', 'bb-go', 'Gem nu'); go.onclick = async () => { try { await exportData(); } catch (e) {} bar.remove(); };
+  const x = el('button', 'bb-x', '✕'); x.onclick = () => { store.set('backupSnooze', Date.now()); bar.remove(); };
+  bar.append(go, x); app.insertBefore(bar, app.children[1]); // under the topbar
 }
 
 build();
+requestPersist();
+maybeBackupReminder();
 if ('serviceWorker' in navigator) addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
 window.__es = { show, current };
