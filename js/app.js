@@ -40,8 +40,28 @@ const app = document.getElementById('app');
 const views = {};
 let current = null;
 
+// Owner name → app title. Triple-tap the title to change it.
+const possessive = (name) => name + (/[sxzSXZ]$/.test(name) ? "'" : 's');
+function brandTitle() { return possessive(store.get('ownerName', 'Emma')) + ' Strik'; }
+function applyBrand() {
+  const b = document.querySelector('.brand'); if (b) b.textContent = brandTitle();
+  document.title = brandTitle();
+}
+function renameOwner() {
+  const cur = store.get('ownerName', 'Emma');
+  const name = (prompt('Hvis strikke-app er det? Skriv et fornavn:', cur) || '').trim();
+  if (!name) return;
+  store.set('ownerName', name.slice(0, 24));
+  applyBrand();
+}
+
 function build() {
-  const header = el('header', 'topbar', `<span class="brandicon">${ICONS.yarn}</span><span class="brand">Emmas&nbsp;Strik</span>`);
+  const header = el('header', 'topbar', `<span class="brandicon">${ICONS.yarn}</span><span class="brand"></span>`);
+  const brandEl = header.querySelector('.brand');
+  brandEl.textContent = brandTitle();
+  document.title = brandTitle();
+  brandEl.title = 'Tryk 3 gange for at skifte navn';
+  brandEl.addEventListener('click', () => { brandEl._n = (brandEl._n || 0) + 1; clearTimeout(brandEl._t); if (brandEl._n >= 3) { brandEl._n = 0; renameOwner(); } else brandEl._t = setTimeout(() => { brandEl._n = 0; }, 600); });
   const main = el('main', 'view');
   const nav = el('nav', 'bottomnav');
   app.append(header, main, nav);

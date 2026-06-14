@@ -2,7 +2,7 @@
 // Big tap targets, auto-save on every tap (never lose your place), Screen Wake Lock while open.
 import { store, uid } from './store.js';
 import { openReader } from './reader.js';
-import { allUploads, getUpload } from './idb.js';
+import { allUploads, getUpload, putPhoto, getPhoto } from './idb.js';
 import { CAT_ICONS, ICON_GROUPS, DEFAULT_ICON } from './caticons.js';
 
 let E, M, node;
@@ -50,7 +50,8 @@ function render() { if (active()) renderDetail(); else { releaseWake(); renderLi
 
 function projCard(p) {
   const main = p.counters[0];
-  const row = E('button', 'projcard' + (p.done ? ' done' : ''), `<div class="pc-main"><b>${esc(p.name)}${p.done ? ' <span class="donetick">✓</span>' : ''}</b>
+  const photo = p.photoId ? `<span class="pc-photo" data-ph="${esc(p.photoId)}"></span>` : '';
+  const row = E('button', 'projcard' + (p.done ? ' done' : '') + (p.photoId ? ' hasphoto' : ''), `${photo}<div class="pc-main"><b>${esc(p.name)}${p.done ? ' <span class="donetick">✓</span>' : ''}</b>
     <span class="pc-sub">${[p.yarn, p.needle].filter(Boolean).map(esc).join(' · ') || (p.done ? 'færdigt' : 'tryk for at fortsætte')}</span></div>
     <div class="pc-count"><span class="pc-num">${main ? main.value : 0}</span><span class="pc-lbl">omg.</span></div>`);
   row.onclick = () => { activeId = p.id; save(); if (!p.done) requestWake(); renderDetail(); };
@@ -72,9 +73,27 @@ function statusCard() {
       <div class="sttile"><b>${ongoing}</b><span>i gang</span></div>
       <div class="sttile"><b>${meters}</b><span>meter strikket</span></div>
       <div class="sttile"><b>${grams}</b><span>gram brugt</span></div>
-    </div>`;
+    </div>
+    <div class="stphotos"></div>`;
   c.querySelectorAll('.stp').forEach((b) => b.onclick = () => { statusPeriod = b.dataset.p; renderList(); });
   return c;
+}
+
+// Finished-project photos load from IndexedDB after the list is on screen.
+async function fillPhotos() {
+  for (const el of node.querySelectorAll('.pc-photo[data-ph]')) {
+    try { const ph = await getPhoto(el.dataset.ph); if (ph && ph.blob) { el.style.backgroundImage = `url(${URL.createObjectURL(ph.blob)})`; el.classList.add('on'); } } catch (e) {}
+  }
+  const strip = node.querySelector('.stphotos');
+  if (strip) {
+    const year = new Date().getFullYear();
+    const done = projects.filter((p) => p.done && p.photoId);
+    const inP = statusPeriod === 'all' ? done : done.filter((p) => p.finishedAt && new Date(p.finishedAt).getFullYear() === year);
+    for (const p of inP) {
+      try { const ph = await getPhoto(p.photoId); if (ph && ph.blob) { const img = E('img', 'stphoto'); img.src = URL.createObjectURL(ph.blob); img.alt = esc(p.name); strip.append(img); } } catch (e) {}
+    }
+    if (!strip.children.length) strip.remove();
+  }
 }
 
 function renderList() {
@@ -98,6 +117,7 @@ function renderList() {
     done.forEach((p) => dl.append(projCard(p)));
     node.append(dl);
   }
+  fillPhotos();
 }
 
 function renderDetail() {
@@ -151,9 +171,8 @@ function renderDetail() {
   const addc = E('button', 'ghost wide', '+ Tilføj tæller'); addc.onclick = () => counterModal(p);
   const doneBtn = E('button', 'ghost wide ' + (p.done ? '' : 'finish'), p.done ? 'Genåbn projekt' : '✓ Marker som færdig');
   doneBtn.onclick = () => {
-    p.done = !p.done;
-    if (p.done) { p.finishedAt = Date.now(); releaseWake(); save(); activeId = null; renderList(); }
-    else { delete p.finishedAt; save(); renderDetail(); }
+    if (p.done) { p.done = false; delete p.finishedAt; save(); renderDetail(); }
+    else finishModal(p);
   };
   const reset = E('button', 'ghost wide subtle', 'Nulstil alle tællere'); reset.onclick = () => { if (confirm('Nulstil alle tællere i dette projekt?')) { p.counters.forEach((c) => { c.value = c.wrapAt ? 1 : 0; c.repeats = 0; }); save(); renderDetail(); } };
   const delp = E('button', 'ghost wide danger', 'Slet projekt'); delp.onclick = () => { if (confirm('Slet projektet "' + p.name + '"?')) { projects = projects.filter((x) => x !== p); activeId = null; save(); releaseWake(); renderList(); } };
@@ -218,6 +237,56 @@ function counterModal(project) {
     const follow = f.querySelector('#c-follow').checked;
     project.counters.push({ id: uid(), label, value: wrapAt ? 1 : 0, wrapAt, repeats: 0, follow });
     save(); m.close(); renderDetail();
+  };
+}
+
+/* shrink a phone photo to a sensible size before storing (keeps backups small) */
+function downscaleImage(file, max = 1280, q = 0.82) {
+  return new Promise((res) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      let w = img.naturalWidth, h = img.naturalHeight;
+      const scale = Math.min(1, max / Math.max(w, h));
+      w = Math.round(w * scale); h = Math.round(h * scale);
+      const cv = document.createElement('canvas'); cv.width = w; cv.height = h;
+      cv.getContext('2d').drawImage(img, 0, 0, w, h);
+      URL.revokeObjectURL(url);
+      cv.toBlob((b) => res(b || file), 'image/jpeg', q);
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); res(file); };
+    img.src = url;
+  });
+}
+
+/* celebrate finishing a project: add a photo + confirm yarn used, then mark done */
+function finishModal(p) {
+  const f = E('div', 'form finishform');
+  const yarnHint = p.yarn ? ` af ${esc(p.yarn)}` : '';
+  f.innerHTML = `<h2 class="finishhead"><span class="finishtick"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span> Tillykke — det er færdigt!</h2>
+    <p class="hint">Gem et minde om “${esc(p.name)}” — det vises i din statusoversigt.</p>
+    <label class="photopick">Billede af det færdige strik (valgfrit)<input id="fin-photo" type="file" accept="image/*"></label>
+    <div id="fin-prev" class="finprev" hidden></div>
+    <div class="formsec">Garnforbrug${yarnHint} (valgfrit)</div>
+    <div class="grid2"><label class="nl">Garn brugt (g)<input id="fin-grams" type="number" inputmode="numeric" min="0" placeholder="fx 350" value="${p.gramsUsed != null ? p.gramsUsed : ''}"></label><label class="nl">Løbelængde (m / 50 g)<input id="fin-runlen" type="number" inputmode="numeric" min="0" placeholder="fx 150" value="${p.mPer50g != null ? p.mPer50g : ''}"></label></div>
+    <div class="form-actions"><button class="ghost cancel">Annuller</button><button class="primary ok">Gem som færdigt</button></div>`;
+  const m = M(f);
+  let photoBlob = null;
+  const prev = f.querySelector('#fin-prev');
+  f.querySelector('#fin-photo').onchange = async (e) => {
+    const file = e.target.files && e.target.files[0]; if (!file) { prev.hidden = true; photoBlob = null; return; }
+    prev.hidden = false; prev.innerHTML = '<span class="hint">Behandler billede…</span>';
+    photoBlob = await downscaleImage(file);
+    prev.innerHTML = `<img src="${URL.createObjectURL(photoBlob)}" alt="forhåndsvisning">`;
+  };
+  f.querySelector('.cancel').onclick = () => m.close();
+  f.querySelector('.ok').onclick = async () => {
+    const gv = parseFloat(f.querySelector('#fin-grams').value), rv = parseFloat(f.querySelector('#fin-runlen').value);
+    if (Number.isFinite(gv)) p.gramsUsed = gv;
+    if (Number.isFinite(rv)) p.mPer50g = rv;
+    if (photoBlob) { try { const id = 'ph_' + p.id; await putPhoto({ id, blob: photoBlob, mime: photoBlob.type || 'image/jpeg', addedAt: Date.now() }); p.photoId = id; } catch (err) {} }
+    p.done = true; p.finishedAt = Date.now();
+    releaseWake(); activeId = null; save(); m.close(); renderList();
   };
 }
 

@@ -1,6 +1,6 @@
 // Backup / restore — export ALL on-device data (incl. uploaded files) to a JSON file, import back.
 import { store } from './store.js';
-import { allUploads, putUpload } from './idb.js';
+import { allUploads, putUpload, allPhotos, putPhoto } from './idb.js';
 
 const KEYS = ['projects', 'activeProject', 'favorites', 'owned', 'collections', 'stash', 'tools', 'lastBackupAt'];
 
@@ -18,7 +18,10 @@ export async function exportData() {
   const ups = await allUploads();
   const uploads = [];
   for (const u of ups) uploads.push({ ...u, blob: await blobToDataURL(u.blob) });
-  const payload = { _app: 'emmas-strik', _v: 1, ts: Date.now(), ls, uploads };
+  const phs = await allPhotos();
+  const photos = [];
+  for (const ph of phs) photos.push({ ...ph, blob: await blobToDataURL(ph.blob) });
+  const payload = { _app: 'emmas-strik', _v: 2, ts: Date.now(), ls, uploads, photos };
   const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a'); a.href = url; a.download = `emmas-strik-backup-${stamp()}.json`; a.click();
@@ -34,6 +37,9 @@ export async function importData(file) {
   let restored = 0, failed = 0;
   for (const u of (Array.isArray(d.uploads) ? d.uploads : [])) {
     try { await putUpload({ ...u, blob: dataURLToBlob(u.blob) }); restored++; } catch (e) { failed++; }
+  }
+  for (const ph of (Array.isArray(d.photos) ? d.photos : [])) {
+    try { await putPhoto({ ...ph, blob: dataURLToBlob(ph.blob) }); restored++; } catch (e) { failed++; }
   }
   return { restored, failed };
 }

@@ -96,8 +96,15 @@ Counter + calculators + 64-pattern curated gallery. To grow gallery: add verifie
 - Project form: yarn autocomplete, needle dropdown (½-mm), løbelængde per 50 g, category select + inline "+ Ny kategori".
 - Project↔recipe: "Tilknyt/Åbn opskrift"; reader resumes; **progress (ruler/scroll/zoom/count) is PER PROJECT**
   (same recipe tracks separately per project; annotations stay on the pattern).
-- ▶ STILL OPEN (critique Batch B, optional): "finish a project" celebration — on Marker som færdig, prompt
-  grams used (prefill from linked yarn) + add a finished photo, and show photos in the status overview.
+## Phase 7 — finish celebration + app rename  ✅ DONE (SW v19)
+- **Finish a project = a moment** (critique Batch B): "✓ Marker som færdig" now opens a celebration modal —
+  add a photo of the finished piece + confirm Garn brugt (g) / Løbelængde (m/50 g, prefilled). Photo is
+  downscaled (≤1280px JPEG) and stored in a new IndexedDB store `photos` (idb VER 2). Finished photos appear
+  in a scrollable strip in the status overview and as a thumbnail on each finished project card. Backups now
+  include photos (backup _v2). Browser-verified: 1050 m computed (350g×150/50), photo in strip+card, 0 errors.
+- **Rename the app**: triple-tap the title → prompt for a first name; brand + browser-tab title become
+  "<Name>s Strik" (Danish possessive: apostrophe for names ending s/x/z → "Lars' Strik"). Stored in
+  `es_ownerName`. Verified Dorthe→"Dorthes Strik", Lars→"Lars' Strik".
 
 ## Key decisions (full detail in DESIGN.md)
 Danish mobile-first PWA = knitting companion (multi-counter projects + calculators) + curated link

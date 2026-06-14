@@ -307,3 +307,16 @@ input, textarea { font-family: inherit; }
 .thumb .ph { color: var(--wool-dk); }
 .rbtn.lbl span svg { width: 18px; height: 18px; }
 .infobtn svg { width: 17px; height: 17px; vertical-align: middle; }
+
+/* finished-project photos */
+.projcard .pc-main { flex: 1; min-width: 0; }
+.pc-photo { flex: 0 0 auto; width: 46px; height: 46px; border-radius: 10px; background: var(--cream) center/cover no-repeat; border: 1px solid var(--line); }
+.stphotos { display: flex; gap: 8px; overflow-x: auto; margin-top: 12px; padding-bottom: 2px; -webkit-overflow-scrolling: touch; }
+.stphotos:empty { display: none; }
+.stphoto { flex: 0 0 auto; width: 84px; height: 84px; object-fit: cover; border-radius: 12px; border: 1px solid var(--line); box-shadow: var(--shadow); }
+
+/* finish celebration modal */
+.finishhead { display: flex; align-items: center; gap: 9px; color: var(--wool-dk); }
+.finishtick { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 50%; background: var(--sage); color: #fff; flex: 0 0 auto; }
+.finprev { margin: 4px 0 6px; }
+.finprev img { width: 100%; max-height: 240px; object-fit: cover; border-radius: 12px; border: 1px solid var(--line); }
