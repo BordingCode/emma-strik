@@ -86,6 +86,19 @@ Counter + calculators + 64-pattern curated gallery. To grow gallery: add verifie
 - Browser-verified: views/switch/owned-toggle/labels/backup all work; 0 console errors. SW→v14.
   (Local-server HTTP cache can serve stale modules during dev — live deploy's SW bump handles it.)
 
+## Phase 6 — 10-agent critique pass + targeted requests  ✅ DONE (SW v18)
+- Contrast/a11y: darker tokens (WCAG), focus-visible, reduced-motion, browser-zoom allowed.
+- De-tofu: SVG thumb placeholders + PDF first-page thumbnails, SVG reader tools + info icon; emoji stripped.
+- Data safety: store.set surfaces quota-full; storage.persist(); backup reminder bar; timestamped backups;
+  import confirm + restored/failed report. SW shell = network-first (no stranded deploys).
+- Reader: saves anno+count+position continuously; resize-listener cleanup; object-URL leak fixed.
+- Accuracy: yarn-weight table fixed; Sunday Sweater Lace→Fingering. Removed cryptic gear (backup in Garn only).
+- Project form: yarn autocomplete, needle dropdown (½-mm), løbelængde per 50 g, category select + inline "+ Ny kategori".
+- Project↔recipe: "Tilknyt/Åbn opskrift"; reader resumes; **progress (ruler/scroll/zoom/count) is PER PROJECT**
+  (same recipe tracks separately per project; annotations stay on the pattern).
+- ▶ STILL OPEN (critique Batch B, optional): "finish a project" celebration — on Marker som færdig, prompt
+  grams used (prefill from linked yarn) + add a finished photo, and show photos in the status overview.
+
 ## Key decisions (full detail in DESIGN.md)
 Danish mobile-first PWA = knitting companion (multi-counter projects + calculators) + curated link
 gallery (DK/EN, credited thumbnails linking out). Don't build a pattern DB. Vanilla JS, no build,
