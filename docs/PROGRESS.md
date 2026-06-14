@@ -38,6 +38,19 @@
 ## 🎉 ALL MILESTONES DONE — app complete & live: https://bordingcode.github.io/emma-strik/
 Counter + calculators + 64-pattern curated gallery. To grow gallery: add verified entries to data/patterns.js.
 
+## Phase 2 — Emma's personal data  ✅ DONE
+- ✅ Upload own patterns from phone (PDF/photo) → stored on-device in IndexedDB (js/idb.js); shown as "Min"
+  cards under a "Mine" filter; tap "Åbn" opens the file. Verified: stored, persists across reload, renders.
+- ✅ "Ejet" (owned) flag on curated patterns (⋯ → Marker som ejet) → gold badge + "✓ Ejet" filter.
+- ✅ Custom collections (samlinger): create your own, add any pattern (curated or own) via ⋯ → Føj til samling;
+  collection chips filter the gallery.
+- ✅ New "Lager" tab (Garn & grej): yarn stash + tools/needles CRUD (js/stash.js), localStorage.
+- ✅ Backup/Restore (gear in top bar, js/backup.js): export ALL on-device data incl. uploaded files (base64)
+  to a JSON, and import it back. Verified export downloads; mitigates the on-device-only storage caveat.
+- ✅ browser-verified all flows on phone; 0 console errors. SW→v6.
+- ⚠️ STORAGE CAVEAT: all user data is on-device only (no backend/sync); could be lost if browser data cleared.
+  Backup is the mitigation. True cross-device sync would need a paid backend (future option).
+
 ## Key decisions (full detail in DESIGN.md)
 Danish mobile-first PWA = knitting companion (multi-counter projects + calculators) + curated link
 gallery (DK/EN, credited thumbnails linking out). Don't build a pattern DB. Vanilla JS, no build,
