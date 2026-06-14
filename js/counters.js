@@ -5,6 +5,8 @@ import { store, uid } from './store.js';
 let E, M, node;
 let projects = [], activeId = null;
 let wakeLock = null;
+let statusPeriod = 'year';
+const projMeters = (p) => (p.gramsUsed && p.mPer100g) ? Math.round(p.gramsUsed * p.mPer100g / 100) : 0;
 
 export function initCounters(container, helpers) {
   E = helpers.el; M = helpers.modal; node = container;
@@ -46,9 +48,30 @@ function projCard(p) {
   return row;
 }
 
+function statusCard() {
+  const year = new Date().getFullYear();
+  const done = projects.filter((p) => p.done);
+  const inP = statusPeriod === 'all' ? done : done.filter((p) => p.finishedAt && new Date(p.finishedAt).getFullYear() === year);
+  const grams = inP.reduce((s, p) => s + (Number(p.gramsUsed) || 0), 0);
+  const meters = inP.reduce((s, p) => s + projMeters(p), 0);
+  const ongoing = projects.filter((p) => !p.done).length;
+  const c = E('div', 'statuscard');
+  c.innerHTML = `<div class="sthead">Din statusoversigt</div>
+    <div class="stperiod"><button class="stp${statusPeriod === 'year' ? ' on' : ''}" data-p="year">I år (${year})</button><button class="stp${statusPeriod === 'all' ? ' on' : ''}" data-p="all">I alt</button></div>
+    <div class="sttiles">
+      <div class="sttile"><b>${inP.length}</b><span>færdige</span></div>
+      <div class="sttile"><b>${ongoing}</b><span>i gang</span></div>
+      <div class="sttile"><b>${meters}</b><span>meter strikket</span></div>
+      <div class="sttile"><b>${grams}</b><span>gram brugt</span></div>
+    </div>`;
+  c.querySelectorAll('.stp').forEach((b) => b.onclick = () => { statusPeriod = b.dataset.p; renderList(); });
+  return c;
+}
+
 function renderList() {
   node.innerHTML = '';
   node.append(E('div', 'pagehead', `<h1>Dine projekter</h1><p class="hint">Tæl omgange uden at miste tællingen — skærmen forbliver tændt mens du strikker.</p>`));
+  if (projects.length) node.append(statusCard());
   const active = projects.filter((p) => !p.done);
   const done = projects.filter((p) => p.done);
   if (!projects.length) node.append(E('p', 'empty', 'Ingen projekter endnu. Start dit første herunder. 🧶'));
@@ -130,14 +153,18 @@ function projectModal(existing) {
     <label>Garn<input id="f-yarn" type="text" maxlength="40" placeholder="fx Drops Air" value="${existing ? esc(existing.yarn || '') : ''}"></label>
     <label>Pinde<input id="f-needle" type="text" maxlength="20" placeholder="fx 4 mm" value="${existing ? esc(existing.needle || '') : ''}"></label>
     <label>Noter<textarea id="f-notes" rows="2" maxlength="200" placeholder="evt. noter">${existing ? esc(existing.notes || '') : ''}</textarea></label>
+    <div class="formsec">Garnforbrug (til din statusoversigt — valgfrit)</div>
+    <div class="grid2"><label class="nl">Garn brugt (g)<input id="f-grams" type="number" inputmode="numeric" min="0" placeholder="fx 350" value="${existing && existing.gramsUsed != null ? existing.gramsUsed : ''}"></label><label class="nl">Løbelængde (m/100 g)<input id="f-runlen" type="number" inputmode="numeric" min="0" placeholder="fx 300" value="${existing && existing.mPer100g != null ? existing.mPer100g : ''}"></label></div>
     <div class="form-actions"><button class="ghost cancel">Annuller</button><button class="primary ok">Gem</button></div>`;
   const m = M(f);
   f.querySelector('.cancel').onclick = () => m.close();
   f.querySelector('.ok').onclick = () => {
     const name = f.querySelector('#f-name').value.trim() || 'Nyt projekt';
     const yarn = f.querySelector('#f-yarn').value.trim(), needle = f.querySelector('#f-needle').value.trim(), notes = f.querySelector('#f-notes').value.trim();
-    if (existing) { Object.assign(existing, { name, yarn, needle, notes }); }
-    else { const p = { id: uid(), name, yarn, needle, notes, counters: [{ id: uid(), label: 'Omgange', value: 0, wrapAt: 0, repeats: 0, main: true }] }; projects.push(p); activeId = p.id; }
+    const gv = parseFloat(f.querySelector('#f-grams').value); const rv = parseFloat(f.querySelector('#f-runlen').value);
+    const gramsUsed = Number.isFinite(gv) ? gv : null, mPer100g = Number.isFinite(rv) ? rv : null;
+    if (existing) { Object.assign(existing, { name, yarn, needle, notes, gramsUsed, mPer100g }); }
+    else { const p = { id: uid(), name, yarn, needle, notes, gramsUsed, mPer100g, counters: [{ id: uid(), label: 'Omgange', value: 0, wrapAt: 0, repeats: 0, main: true }] }; projects.push(p); activeId = p.id; }
     save(); m.close(); render();
   };
 }

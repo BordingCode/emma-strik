@@ -2,6 +2,8 @@
 import { PATTERNS, CATEGORIES, CAT_ICON } from '../data/patterns.js';
 import { store, uid } from './store.js';
 import { allUploads, putUpload, delUpload } from './idb.js';
+import { CAT_ICONS, ICON_GROUPS, DEFAULT_ICON } from './caticons.js';
+import { openReader } from './reader.js';
 
 const E = (t, c, h) => { const e = document.createElement(t); if (c) e.className = c; if (h != null) e.innerHTML = h; return e; };
 const DIFF = { 'begynder': '● Begynder', 'let øvet': '●● Let øvet', 'øvet': '●●● Øvet' };
@@ -56,8 +58,11 @@ function render() {
   });
 
   const colRow = E('div', 'chips colrow');
+  const cards = allCards();
   collections.forEach((col) => {
-    const b = E('button', 'chip col' + (filters.collection === col.id ? ' on' : ''), `📁 ${esc(col.name)}`);
+    const cnt = cards.filter((p) => (col.items || []).includes(p.id)).length;
+    const b = E('button', 'chip col' + (filters.collection === col.id ? ' on' : ''));
+    b.innerHTML = `<span class="cicon">${CAT_ICONS[col.icon] || CAT_ICONS[DEFAULT_ICON]}</span>${esc(col.name)}<span class="ccount">${cnt}</span>`;
     b.onclick = () => { filters.collection = filters.collection === col.id ? null : col.id; render(); };
     colRow.append(b);
   });
@@ -119,7 +124,14 @@ function card(p) {
 
   const foot = E('div', 'pfoot');
   const open = E('a', 'plink', p.own ? 'Åbn →' : 'Se opskrift →');
-  if (p.own) { open.href = '#'; open.onclick = (e) => { e.preventDefault(); const url = URL.createObjectURL(p.upload.blob); window.open(url, '_blank'); }; }
+  if (p.own) {
+    open.href = '#';
+    open.onclick = (e) => {
+      e.preventDefault();
+      if ((p.upload.mime || '').startsWith('image/')) openReader(p.upload);
+      else window.open(URL.createObjectURL(p.upload.blob), '_blank'); // PDF opens externally
+    };
+  }
   else { open.href = p.url; open.target = '_blank'; open.rel = 'noopener noreferrer'; }
   const more = E('button', 'morebtn', '⋯'); more.onclick = () => actionSheet(p);
   foot.append(open, more);
@@ -170,15 +182,20 @@ function collectionPicker(p) {
 }
 
 function newCollection(addPattern) {
+  let chosen = DEFAULT_ICON;
   const f = E('div', 'form');
-  f.innerHTML = `<h2>Ny samling</h2><label>Navn<input id="nc-name" type="text" maxlength="30" placeholder="fx Til mor, Jul, Næste projekt"></label>
+  const grid = ICON_GROUPS.map((g) => `<div class="icogrp">${g.label}</div><div class="icorow">${g.ids.map((id) => `<button type="button" class="icobtn${id === chosen ? ' on' : ''}" data-ic="${id}">${CAT_ICONS[id]}</button>`).join('')}</div>`).join('');
+  f.innerHTML = `<h2>Ny kategori</h2>
+    <label>Navn<input id="nc-name" type="text" maxlength="30" placeholder="fx Babytøj, Huer, Til mor"></label>
+    <div class="icolabel">Vælg ikon</div><div class="icopick">${grid}</div>
     <div class="form-actions"><button class="ghost cancel">Annuller</button><button class="primary ok">Opret</button></div>`;
   const m = M(f);
+  f.querySelectorAll('.icobtn').forEach((b) => b.onclick = () => { chosen = b.dataset.ic; f.querySelectorAll('.icobtn').forEach((x) => x.classList.toggle('on', x === b)); });
   f.querySelector('.cancel').onclick = () => m.close();
   f.querySelector('.ok').onclick = () => {
     const name = f.querySelector('#nc-name').value.trim(); if (!name) return;
-    const col = { id: uid(), name, items: addPattern ? [addPattern.id] : [] };
-    collections.push(col); saveCollections(); m.close(); render();
+    collections.push({ id: uid(), name, icon: chosen, items: addPattern ? [addPattern.id] : [] });
+    saveCollections(); m.close(); render();
   };
 }
 

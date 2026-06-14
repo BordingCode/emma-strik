@@ -61,6 +61,17 @@ Counter + calculators + 64-pattern curated gallery. To grow gallery: add verifie
 - ✅ Renamed the counter tab "Tæller" → "Projekter" (nav label; internal id stays 'taeller').
 - ✅ Calculators got ⓘ info sheets earlier this phase. Browser-verified all; 0 console errors. SW→v8.
 
+## Phase 4 — Emma's emailed wishlist (5 requests via mathiasjobbot)  ✅ DONE
+- ✅ #5 Category icons: js/caticons.js (17 garment line-icons, grouped); icon picker in "Ny kategori"; chips show icon.
+- ✅ #4 Category counts: collection chips show pattern count.
+- ✅ #2 Hjælpevideoer card in Beregner: verified links (Kimmie Munkholm YouTube, PetiteKnit videos, YouTube search).
+- ✅ #3 Statusoversigt: status card on Projekter (færdige/i gang/meter strikket/gram brugt) with "I år / I alt"
+  period toggle; projects got optional Garn brugt (g) + Løbelængde (m/100g) → metres computed (verified 350g×300=1050m).
+- ✅ #1 In-pattern reader (js/reader.js) for her IMAGE uploads: zoom, draggable row-ruler, embedded counter,
+  highlighter/pencil/eraser annotation — annotation + counter saved per pattern in IDB. (PDF uploads still open
+  externally; pdf.js could enable in-PDF reading later.) Browser-verified: draw persists, counter persists, 0 errors.
+- SW→v11. All browser-verified on the local server.
+
 ## Key decisions (full detail in DESIGN.md)
 Danish mobile-first PWA = knitting companion (multi-counter projects + calculators) + curated link
 gallery (DK/EN, credited thumbnails linking out). Don't build a pattern DB. Vanilla JS, no build,
