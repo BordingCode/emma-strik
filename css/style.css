@@ -276,3 +276,16 @@ input, textarea { font-family: inherit; }
 /* reader ruler-toggle active state + pinch-friendly stage */
 .rbtn.rulertoggle.on { background: var(--sage); border-color: var(--sage); }
 .reader-stage { touch-action: pan-x pan-y; }
+
+/* ============ intuitive pass: view switch, labels, one-tap owned ============ */
+.viewseg { display: flex; gap: 6px; background: var(--cream); border: 1px solid var(--line); border-radius: 14px; padding: 4px; margin-bottom: 12px; }
+.segbtn { flex: 1; background: transparent; border: none; border-radius: 11px; padding: 11px 6px; font-size: 15px; color: var(--muted); font-weight: 600; }
+.segbtn.on { background: var(--wool); color: #fff; box-shadow: var(--shadow); }
+.rowlabel { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin: 12px 0 4px; }
+.ownbtn { flex: 0 0 auto; width: 40px; border: 1px solid var(--line); border-radius: 9px; background: var(--cream); color: var(--muted); font-size: 16px; }
+.ownbtn.on { background: #f6ecd4; color: #9a7320; border-color: #ead9b0; }
+.emptymine { text-align: center; padding: 16px 0; }
+.emptymine .empty { padding: 16px 10px; }
+.emptymine .primary, .emptymine .ghost { display: block; width: 100%; max-width: 320px; margin: 8px auto; }
+.rbtn.lbl { display: inline-flex; flex-direction: column; align-items: center; gap: 1px; padding: 5px 8px; line-height: 1.1; }
+.rbtn.lbl span { font-size: 16px; } .rbtn.lbl small { font-size: 9px; opacity: .85; }

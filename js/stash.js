@@ -1,5 +1,6 @@
 // Garn & grej — Emma's yarn stash + tools/needles. Stored on-device (localStorage).
 import { store, uid } from './store.js';
+import { exportData, importData } from './backup.js';
 
 let node, M;
 let stash, tools;
@@ -44,6 +45,17 @@ function render() {
   });
   node.append(tl);
   const addT = E('button', 'ghost wide', '+ Tilføj grej'); addT.onclick = () => toolModal(); node.append(addT);
+
+  // ---- backup (was hidden behind the gear icon; now clearly here too) ----
+  node.append(E('h2', 'sechead', '💾 Sikkerhedskopi'));
+  node.append(E('p', 'hint', 'Alt du tilføjer gemmes kun på denne telefon. Lav en sikkerhedskopi, så du ikke mister det — og kan flytte det til en anden enhed.'));
+  const exp = E('button', 'ghost wide', '⬇ Gem sikkerhedskopi');
+  exp.onclick = async () => { exp.textContent = 'Gemmer…'; try { await exportData(); } catch (e) { alert('Kunne ikke gemme.'); } exp.textContent = '⬇ Gem sikkerhedskopi'; };
+  const imp = E('label', 'ghost wide', '⬆ Gendan fra fil');
+  const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'application/json'; inp.style.display = 'none';
+  inp.onchange = async () => { if (!inp.files[0]) return; try { await importData(inp.files[0]); alert('Gendannet! Appen genindlæses.'); location.reload(); } catch (e) { alert('Kunne ikke gendanne: ' + e.message); } };
+  imp.append(inp);
+  node.append(exp, imp);
 }
 
 function field(id, label, val, ph, type) { return `<label>${label}<input id="${id}" type="${type || 'text'}" ${type === 'number' ? 'inputmode="numeric"' : ''} maxlength="40" value="${val ? esc(val) : ''}" placeholder="${ph || ''}"></label>`; }

@@ -32,7 +32,7 @@ const SECTIONS = [
   { id: 'taeller', label: 'Projekter', icon: ICONS.counter, init: initCounters },
   { id: 'beregner', label: 'Beregner', icon: ICONS.calc, init: initCalculators },
   { id: 'opskrifter', label: 'Opskrifter', icon: ICONS.yarn, init: initGallery },
-  { id: 'lager', label: 'Lager', icon: ICONS.box, init: initStash },
+  { id: 'lager', label: 'Garn', icon: ICONS.box, init: initStash },
 ];
 
 const app = document.getElementById('app');

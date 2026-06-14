@@ -1,4 +1,5 @@
-// Opskrifter — curated gallery + Emma's own uploads, owned flag, custom collections.
+// Opskrifter — two clear views: "Mine opskrifter" (her own + owned + saved, in her categories)
+// and "Find nye" (browse the curated library). Removes the old overlapping-filters confusion.
 import { PATTERNS, CATEGORIES, CAT_ICON } from '../data/patterns.js';
 import { store, uid } from './store.js';
 import { allUploads, putUpload, delUpload } from './idb.js';
@@ -14,7 +15,7 @@ const urlCache = new Map();
 
 export async function initGallery(container, helpers) {
   node = container; M = helpers.modal;
-  filters = { cat: 'all', freeOnly: false, favOnly: false, ownedOnly: false, buyOnly: false, collection: null, q: '' };
+  filters = { view: 'mine', cat: 'all', freeOnly: false, buyOnly: false, mine: 'all', collection: null, q: '' };
   favs = new Set(store.get('favorites', []));
   owned = new Set(store.get('owned', []));
   collections = store.get('collections', []);
@@ -40,66 +41,105 @@ const isOwned = (p) => p.own || owned.has(p.id);
 
 function render() {
   node.innerHTML = '';
-  node.append(E('div', 'pagehead', `<h1>Opskrifter</h1>
-    <p class="hint">Håndplukkede opskrifter + dine egne. Tryk for at åbne.</p>`));
+  node.append(E('div', 'pagehead', `<h1>Opskrifter</h1>`));
 
-  // controls
+  // view switch
+  const seg = E('div', 'viewseg');
+  ['mine', 'browse'].forEach((v) => {
+    const b = E('button', 'segbtn' + (filters.view === v ? ' on' : ''), v === 'mine' ? '🧶 Mine opskrifter' : '🔎 Find nye');
+    b.onclick = () => { filters.view = v; filters.collection = null; filters.cat = 'all'; render(); };
+    seg.append(b);
+  });
+  node.append(seg);
+
   const ctr = E('div', 'gctrls');
-  const top = E('div', 'gtoprow');
   const search = E('input', 'gsearch'); search.type = 'search'; search.placeholder = '🔍 Søg…'; search.value = filters.q;
   search.oninput = () => { filters.q = search.value.trim().toLowerCase(); regrid(); };
-  const addBtn = E('button', 'addown', '+ Egen'); addBtn.onclick = uploadModal;
-  top.append(search, addBtn);
 
-  const chips = E('div', 'chips');
-  CATEGORIES.concat([{ id: 'mine', label: 'Mine' }]).forEach((c) => {
-    const b = E('button', 'chip' + (filters.cat === c.id ? ' on' : ''), c.label); b.dataset.cat = c.id;
-    b.onclick = () => { filters.cat = c.id; render(); }; chips.append(b);
-  });
-
-  const colRow = E('div', 'chips colrow');
-  const cards = allCards();
-  collections.forEach((col) => {
-    const cnt = cards.filter((p) => (col.items || []).includes(p.id)).length;
-    const b = E('button', 'chip col' + (filters.collection === col.id ? ' on' : ''));
-    b.innerHTML = `<span class="cicon">${CAT_ICONS[col.icon] || CAT_ICONS[DEFAULT_ICON]}</span>${esc(col.name)}<span class="ccount">${cnt}</span>`;
-    b.onclick = () => { filters.collection = filters.collection === col.id ? null : col.id; render(); };
-    colRow.append(b);
-  });
-  const newCol = E('button', 'chip newcol', '+ Samling'); newCol.onclick = () => newCollection();
-  colRow.append(newCol);
-
-  const toggles = E('div', 'gtoggles');
-  const mk = (label, key) => { const b = E('button', 'toggle' + (filters[key] ? ' on' : ''), label); b.onclick = () => { filters[key] = !filters[key]; render(); }; return b; };
-  toggles.append(mk('Gratis', 'freeOnly'), mk('✓ Ejet', 'ownedOnly'), mk('🛒 Til køb', 'buyOnly'), mk('♥ Gemte', 'favOnly'));
-
-  ctr.append(top, chips, colRow, toggles);
+  if (filters.view === 'mine') {
+    const top = E('div', 'gtoprow');
+    top.append(search);
+    const addBtn = E('button', 'addown', '+ Egen'); addBtn.onclick = uploadModal; top.append(addBtn);
+    ctr.append(top);
+    // sub-filter: alle / egne / ejede / gemte
+    const sub = E('div', 'chips');
+    [['all', 'Alle'], ['egne', 'Egne (uploadet)'], ['ejede', 'Købte'], ['gemte', '♥ Gemte']].forEach(([k, lbl]) => {
+      const b = E('button', 'chip' + (filters.mine === k ? ' on' : ''), lbl);
+      b.onclick = () => { filters.mine = k; render(); }; sub.append(b);
+    });
+    ctr.append(sub);
+    // her categories
+    ctr.append(E('div', 'rowlabel', 'Dine kategorier'));
+    const colRow = E('div', 'chips colrow');
+    const cards = allCards();
+    collections.forEach((col) => {
+      const cnt = cards.filter((p) => (col.items || []).includes(p.id)).length;
+      const b = E('button', 'chip col' + (filters.collection === col.id ? ' on' : ''));
+      b.innerHTML = `<span class="cicon">${CAT_ICONS[col.icon] || CAT_ICONS[DEFAULT_ICON]}</span>${esc(col.name)}${cnt ? `<span class="ccount">${cnt}</span>` : ''}`;
+      b.onclick = () => { filters.collection = filters.collection === col.id ? null : col.id; render(); };
+      colRow.append(b);
+    });
+    const newC = E('button', 'chip newcol', '+ Kategori'); newC.onclick = () => newCollection(); colRow.append(newC);
+    ctr.append(colRow);
+  } else {
+    ctr.append(search);
+    ctr.append(E('div', 'rowlabel', 'Kategorier'));
+    const chips = E('div', 'chips');
+    CATEGORIES.forEach((c) => {
+      const b = E('button', 'chip' + (filters.cat === c.id ? ' on' : ''), c.label); b.dataset.cat = c.id;
+      b.onclick = () => { filters.cat = c.id; render(); }; chips.append(b);
+    });
+    ctr.append(chips);
+    const toggles = E('div', 'gtoggles');
+    const mk = (label, key) => { const b = E('button', 'toggle' + (filters[key] ? ' on' : ''), label); b.onclick = () => { filters[key] = !filters[key]; render(); }; return b; };
+    toggles.append(mk('Gratis', 'freeOnly'), mk('🛒 Til køb', 'buyOnly'));
+    ctr.append(toggles);
+  }
   node.append(ctr);
 
-  const gridWrap = E('div', 'pgrid'); gridWrap.id = 'pgrid'; node.append(gridWrap);
+  const grid = E('div', 'pgrid'); grid.id = 'pgrid'; node.append(grid);
   regrid();
 }
 
 function regrid() {
   const grid = node.querySelector('#pgrid'); if (!grid) return;
-  const col = filters.collection ? collections.find((c) => c.id === filters.collection) : null;
-  const list = allCards().filter((p) =>
-    (filters.cat === 'all' || (filters.cat === 'mine' ? !!p.own : p.category === filters.cat)) &&
-    (!filters.freeOnly || (p.free && !isOwned(p))) &&
-    (!filters.favOnly || favs.has(p.id)) &&
-    (!filters.ownedOnly || isOwned(p)) &&
-    (!filters.buyOnly || (!p.free && !isOwned(p))) &&
-    (!col || (col.items || []).includes(p.id)) &&
-    (!filters.q || (p.name + ' ' + p.designer + ' ' + p.source).toLowerCase().includes(filters.q)));
+  let list;
+  if (filters.view === 'mine') {
+    const col = filters.collection ? collections.find((c) => c.id === filters.collection) : null;
+    list = allCards().filter((p) => (p.own || isOwned(p) || favs.has(p.id))
+      && (filters.mine === 'all'
+        || (filters.mine === 'egne' && p.own)
+        || (filters.mine === 'ejede' && isOwned(p) && !p.own)
+        || (filters.mine === 'gemte' && favs.has(p.id)))
+      && (!col || (col.items || []).includes(p.id))
+      && (!filters.q || (p.name + ' ' + p.designer).toLowerCase().includes(filters.q)));
+  } else {
+    list = PATTERNS.filter((p) =>
+      (filters.cat === 'all' || p.category === filters.cat)
+      && (!filters.freeOnly || (p.free && !isOwned(p)))
+      && (!filters.buyOnly || (!p.free && !isOwned(p)))
+      && (!filters.q || (p.name + ' ' + p.designer + ' ' + p.source).toLowerCase().includes(filters.q)));
+  }
   grid.innerHTML = '';
-  if (!list.length) { grid.append(E('p', 'empty', emptyMsg())); return; }
+  if (!list.length) { grid.append(emptyMsg()); return; }
   list.forEach((p) => grid.append(card(p)));
 }
+
 function emptyMsg() {
-  if (filters.cat === 'mine') return 'Ingen egne opskrifter endnu — tryk “+ Egen”.';
-  if (filters.favOnly) return 'Ingen gemte endnu — tryk ♥ på en opskrift.';
-  if (filters.collection) return 'Samlingen er tom. Tryk ⋯ på en opskrift for at føje den til.';
-  return 'Ingen opskrifter matcher.';
+  if (filters.view === 'mine') {
+    const wrap = E('div', 'emptymine');
+    wrap.innerHTML = `<p class="empty">${filters.collection ? 'Kategorien er tom endnu.' : filters.mine === 'gemte' ? 'Ingen gemte endnu — tryk ♥ på en opskrift.' : 'Du har ingen opskrifter her endnu.'}</p>`;
+    const b1 = E('button', 'primary', '+ Tilføj egen opskrift'); b1.onclick = uploadModal;
+    const b2 = E('button', 'ghost', '🔎 Find nye opskrifter'); b2.onclick = () => { filters.view = 'browse'; render(); };
+    wrap.append(b1, b2);
+    return wrap;
+  }
+  return E('p', 'empty', 'Ingen opskrifter matcher.');
+}
+
+function statusTag(p) {
+  if (isOwned(p)) return '<span class="tag ejet">✓ Ejet</span>';
+  return p.free ? '<span class="tag free">Gratis</span>' : '<span class="tag kob">🛒 Køb</span>';
 }
 
 function card(p) {
@@ -108,29 +148,28 @@ function card(p) {
   if (p.image) { const img = E('img'); img.loading = 'lazy'; img.alt = p.name; img.src = p.image; img.onerror = () => img.remove(); thumb.append(img); }
   if (p.own) thumb.append(E('span', 'mybadge', 'Min'));
   const fav = E('button', 'favbtn' + (favs.has(p.id) ? ' on' : ''), favs.has(p.id) ? '♥' : '♡');
-  fav.onclick = () => { favs.has(p.id) ? favs.delete(p.id) : favs.add(p.id); saveFavs(); fav.classList.toggle('on'); fav.textContent = favs.has(p.id) ? '♥' : '♡'; if (filters.favOnly) regrid(); };
+  fav.onclick = () => { favs.has(p.id) ? favs.delete(p.id) : favs.add(p.id); saveFavs(); fav.classList.toggle('on'); fav.textContent = favs.has(p.id) ? '♥' : '♡'; if (filters.view === 'mine') regrid(); };
   thumb.append(fav);
 
-  const status = isOwned(p) ? '<span class="tag ejet">✓ Ejet</span>'
-    : p.free ? '<span class="tag free">Gratis</span>'
-    : '<span class="tag kob">🛒 Køb</span>';
   const tags = E('div', 'ptags');
-  tags.innerHTML = `${status}
+  tags.innerHTML = `${statusTag(p)}
     ${p.difficulty ? `<span class="tag">${DIFF[p.difficulty] || p.difficulty}</span>` : ''}
-    ${p.yarnWeight ? `<span class="tag">${p.yarnWeight}</span>` : ''}
-    <span class="tag lang">${p.lang === 'da' ? 'DA' : 'EN'}</span>`;
+    ${p.yarnWeight ? `<span class="tag">${p.yarnWeight}</span>` : ''}`;
   const body = E('div', 'pbody');
   body.append(E('b', 'pname', esc(p.name)), E('div', 'pmeta', `${esc(p.designer)} · ${esc(p.source)}`), tags);
 
   const foot = E('div', 'pfoot');
   const open = E('a', 'plink', p.own ? 'Åbn →' : 'Se opskrift →');
-  if (p.own) {
-    open.href = '#';
-    open.onclick = (e) => { e.preventDefault(); openReader(p.upload); }; // image or PDF, both in the reader
-  }
+  if (p.own) { open.href = '#'; open.onclick = (e) => { e.preventDefault(); openReader(p.upload); }; }
   else { open.href = p.url; open.target = '_blank'; open.rel = 'noopener noreferrer'; }
-  const more = E('button', 'morebtn', '⋯'); more.onclick = () => actionSheet(p);
-  foot.append(open, more);
+  foot.append(open);
+  if (!p.own) { // one-tap owned toggle
+    const ob = E('button', 'ownbtn' + (owned.has(p.id) ? ' on' : ''), owned.has(p.id) ? '✓' : '○');
+    ob.title = 'Jeg ejer denne';
+    ob.onclick = () => { owned.has(p.id) ? owned.delete(p.id) : owned.add(p.id); saveOwned(); render(); };
+    foot.append(ob);
+  }
+  const more = E('button', 'morebtn', '⋯'); more.onclick = () => actionSheet(p); foot.append(more);
   body.append(foot);
   a.append(thumb, body);
   return a;
@@ -138,15 +177,9 @@ function card(p) {
 
 /* ---------------- actions ---------------- */
 function actionSheet(p) {
-  const f = E('div', 'sheet');
-  f.innerHTML = `<h2>${esc(p.name)}</h2>`;
+  const f = E('div', 'sheet', `<h2>${esc(p.name)}</h2>`);
   const list = E('div', 'sheetacts');
-  if (!p.own) {
-    const ob = E('button', 'sheetbtn', isOwned(p) ? '✓ Fjern “Ejet”' : '✓ Marker som ejet');
-    ob.onclick = () => { owned.has(p.id) ? owned.delete(p.id) : owned.add(p.id); saveOwned(); m.close(); render(); };
-    list.append(ob);
-  }
-  const cb = E('button', 'sheetbtn', '📁 Føj til samling…'); cb.onclick = () => { m.close(); collectionPicker(p); };
+  const cb = E('button', 'sheetbtn', '📁 Føj til kategori…'); cb.onclick = () => { m.close(); collectionPicker(p); };
   list.append(cb);
   if (p.own) {
     const del = E('button', 'sheetbtn danger', '🗑 Slet egen opskrift');
@@ -154,26 +187,23 @@ function actionSheet(p) {
     list.append(del);
   }
   const cancel = E('button', 'sheetbtn subtle', 'Luk'); cancel.onclick = () => m.close();
-  list.append(cancel);
-  f.append(list);
+  list.append(cancel); f.append(list);
   const m = M(f);
 }
 
 function collectionPicker(p) {
-  const f = E('div', 'sheet');
-  f.innerHTML = `<h2>Føj til samling</h2>`;
+  const f = E('div', 'sheet', `<h2>Føj til kategori</h2>`);
   const list = E('div', 'sheetacts');
-  if (!collections.length) list.append(E('p', 'hint', 'Ingen samlinger endnu.'));
+  if (!collections.length) list.append(E('p', 'hint', 'Ingen kategorier endnu.'));
   collections.forEach((col) => {
     const inIt = (col.items || []).includes(p.id);
     const b = E('button', 'sheetbtn' + (inIt ? ' on' : ''), `${inIt ? '✓ ' : ''}${esc(col.name)}`);
-    b.onclick = () => { col.items = col.items || []; if (inIt) col.items = col.items.filter((x) => x !== p.id); else col.items.push(p.id); saveCollections(); m.close(); collectionPicker(p); };
+    b.onclick = () => { col.items = col.items || []; col.items = inIt ? col.items.filter((x) => x !== p.id) : col.items.concat(p.id); saveCollections(); m.close(); collectionPicker(p); };
     list.append(b);
   });
-  const nb = E('button', 'sheetbtn newc', '+ Ny samling'); nb.onclick = () => { m.close(); newCollection(p); };
+  const nb = E('button', 'sheetbtn newc', '+ Ny kategori'); nb.onclick = () => { m.close(); newCollection(p); };
   const cancel = E('button', 'sheetbtn subtle', 'Luk'); cancel.onclick = () => m.close();
-  list.append(nb, cancel);
-  f.append(list);
+  list.append(nb, cancel); f.append(list);
   const m = M(f);
 }
 
@@ -191,7 +221,7 @@ function newCollection(addPattern) {
   f.querySelector('.ok').onclick = () => {
     const name = f.querySelector('#nc-name').value.trim(); if (!name) return;
     collections.push({ id: uid(), name, icon: chosen, items: addPattern ? [addPattern.id] : [] });
-    saveCollections(); m.close(); render();
+    saveCollections(); m.close(); filters.view = 'mine'; render();
   };
 }
 
@@ -211,7 +241,7 @@ function uploadModal() {
     if (!file) { alert('Vælg en fil først.'); return; }
     const name = f.querySelector('#up-name').value.trim() || file.name.replace(/\.[^.]+$/, '');
     const rec = { id: uid(), name, designer: f.querySelector('#up-designer').value.trim(), category: f.querySelector('#up-cat').value, mime: file.type || 'application/octet-stream', blob: file, addedAt: Date.now() };
-    try { await putUpload(rec); uploads.push(rec); m.close(); filters.cat = 'mine'; render(); }
+    try { await putUpload(rec); uploads.push(rec); m.close(); filters.view = 'mine'; filters.mine = 'all'; render(); }
     catch (e) { alert('Kunne ikke gemme filen (måske er den for stor til din browsers lager).'); }
   };
 }

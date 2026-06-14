@@ -74,6 +74,18 @@ Counter + calculators + 64-pattern curated gallery. To grow gallery: add verifie
   persist; 2-page PDF renders (1000×2800 anno layer); 0 console errors.
 - SW→v12 (incl. vendored pdf.js). All browser-verified on the local server.
 
+## Phase 5 — findability / IA pass (after a usability audit)  ✅ DONE
+- ✅ Opskrifter split into two clear views: "🧶 Mine opskrifter" (her uploads + owned + ♥ gemte, sub-filters
+  Alle/Egne/Købte/Gemte, organised by HER categories) and "🔎 Find nye" (browse curated lib; fixed category
+  chips + Gratis/Til-køb). Removes the old 5-row overlapping-filter overload + the two-category-systems confusion.
+- ✅ One-tap "owned" (✓/○) button on each browse card (no longer hidden behind ⋯).
+- ✅ Backup surfaced as a labelled section in the Garn tab (was only the cryptic top-bar "gear/sun" icon, which stays too).
+- ✅ Wording consistency: "kategori" everywhere (was Samling/kategori mix); tab "Lager" → "Garn"; empty 0-counts hidden.
+- ✅ Reader tool icons now labelled (Lineal/Marker/Blyant/Slet/Zoom/Ryd).
+- ✅ Reader bugs fixed earlier this phase: ruler toggles off, pinch-zoom, ruler anchored on zoom, rotation (manifest=any).
+- Browser-verified: views/switch/owned-toggle/labels/backup all work; 0 console errors. SW→v14.
+  (Local-server HTTP cache can serve stale modules during dev — live deploy's SW bump handles it.)
+
 ## Key decisions (full detail in DESIGN.md)
 Danish mobile-first PWA = knitting companion (multi-counter projects + calculators) + curated link
 gallery (DK/EN, credited thumbnails linking out). Don't build a pattern DB. Vanilla JS, no build,

@@ -16,13 +16,13 @@ export async function openReader(upload) {
       <button class="rbtn close">‹ Luk</button>
       <span class="rtitle">${(upload.name || 'Opskrift').replace(/[<>&]/g, '')}</span>
       <div class="rtools">
-        <button class="rbtn rulertoggle" title="Lineal">📏</button>
-        <button class="rbtn tool" data-m="hi" title="Overstreg">🖊️</button>
-        <button class="rbtn tool" data-m="pen" title="Blyant">✏️</button>
-        <button class="rbtn tool" data-m="eraser" title="Viskelæder">🧽</button>
-        <button class="rbtn zout" title="Zoom ud">−</button>
-        <button class="rbtn zin" title="Zoom ind">＋</button>
-        <button class="rbtn clear" title="Ryd tegning">Ryd</button>
+        <button class="rbtn lbl rulertoggle"><span>📏</span><small>Lineal</small></button>
+        <button class="rbtn lbl tool" data-m="hi"><span>🖊️</span><small>Marker</small></button>
+        <button class="rbtn lbl tool" data-m="pen"><span>✏️</span><small>Blyant</small></button>
+        <button class="rbtn lbl tool" data-m="eraser"><span>🧽</span><small>Slet</small></button>
+        <button class="rbtn lbl zout"><span>−</span><small>Zoom</small></button>
+        <button class="rbtn lbl zin"><span>＋</span><small>Zoom</small></button>
+        <button class="rbtn lbl clear"><span>🗑</span><small>Ryd</small></button>
       </div>
     </div>
     <div class="reader-stage">
