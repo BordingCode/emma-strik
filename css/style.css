@@ -85,6 +85,12 @@ h1, h2, h3, .brand { font-family: var(--font-head); letter-spacing: .2px; }
 .ghost { background: var(--raised); color: var(--ink); border: 1px solid var(--line); border-radius: 12px; padding: 12px; font-size: 15px; box-shadow: var(--sh-1); }
 .ghost.wide { display: block; width: 100%; margin-top: 10px; }
 .ghost.subtle { color: var(--muted); } .ghost.danger { color: var(--danger); border-color: #e7c4bd; }
+/* de-emphasised destructive actions, set apart from the constructive ones */
+.danger-row { display: flex; gap: 10px; margin-top: 22px; padding-top: 14px; border-top: 1px solid var(--line-soft); }
+.minor { flex: 1; background: none; border: 1px solid var(--line); border-radius: 11px; padding: 11px;
+  font-size: 13.5px; font-weight: 600; color: var(--muted); }
+.minor:active { transform: scale(.98); }
+.minor.danger { color: var(--danger); }
 .iconbtn { background: none; border: none; font-size: 18px; padding: 8px; color: var(--wool-dk); }
 
 /* project list */
@@ -99,26 +105,29 @@ h1, h2, h3, .brand { font-family: var(--font-head); letter-spacing: .2px; }
 
 /* detail */
 .detailhead { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
-.dtitle { text-align: center; flex: 1; } .dtitle b { font-size: 17px; display: block; } .dtitle small { color: var(--muted); font-size: 12px; }
+.dtitle { text-align: center; flex: 1; } .dtitle b { font-family: var(--font-head); font-weight: 600; font-size: 18px; display: block; } .dtitle small { color: var(--muted); font-size: 12px; }
 
 .maincounter { text-align: center; border: 1px solid var(--line-soft); border-radius: 20px;
   padding: 20px 12px 10px; box-shadow: var(--sh-2); margin-top: 6px;
   background: radial-gradient(120% 120% at 50% 0%, #fffefb, var(--paper) 70%); }
 .mc-label { color: var(--muted); font-size: 13px; letter-spacing: 1.5px; text-transform: uppercase; font-weight: 600; }
-.mc-value { font-family: var(--font-head); font-size: 78px; font-weight: 700; color: var(--wool-dk); line-height: 1.05; font-variant-numeric: tabular-nums; }
+.mc-value { font-family: var(--font-head); font-size: 78px; font-weight: 700; color: var(--wool-dk); line-height: 1.05; font-variant-numeric: tabular-nums; animation: countpop .14s ease-out; }
+@keyframes countpop { from { transform: scale(1.1); } to { transform: scale(1); } }
 .mc-wrap { color: var(--sage); font-size: 14px; font-weight: 600; padding-bottom: 6px; }
 .mc-ctrls { display: flex; gap: 12px; margin-top: 12px; }
 .mc-btn { flex: 1; border: none; border-radius: 16px; font-size: 40px; font-weight: 700; padding: 18px 0; box-shadow: var(--shadow); }
 .mc-btn.plus { flex: 2.2; background: var(--grad-wool); color: #fff; box-shadow: var(--sh-2), inset 0 1px 0 rgba(255,255,255,.18); }
-.mc-btn.minus { background: var(--paper); color: var(--wool-dk); border: 1px solid var(--line); }
+.mc-btn.minus { background: var(--raised); color: var(--wool-dk); border: 1px solid var(--line); box-shadow: var(--sh-1); }
 .mc-btn:active { transform: scale(.97); }
 
 .subcounters { margin-top: 16px; display: flex; flex-direction: column; gap: 8px; }
-.subcounter { display: flex; align-items: center; justify-content: space-between; gap: 8px;
-  background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 8px 8px 8px 14px; }
-.subcounter.follow { background: var(--sunken); }
-.sc-info b { font-size: 15px; } .sc-val { color: var(--wool-dk); font-weight: 700; margin-left: 8px; }
-.sc-tag { display: block; font-size: 11px; color: var(--sage); }
+.subcounter { display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  background: var(--raised); border: 1px solid var(--line-soft); border-radius: 12px; padding: 10px 10px 10px 14px; box-shadow: var(--sh-1); }
+.subcounter.follow { background: var(--sunken); box-shadow: none; }
+.sc-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.sc-info b { font-size: 15px; }
+.sc-sub { font-size: 12.5px; color: var(--muted); }
+.sc-sub .sc-num { color: var(--wool-dk); font-size: 15px; font-variant-numeric: tabular-nums; }
 .sc-ctrls { display: flex; align-items: center; gap: 6px; }
 .sc-btn { width: 44px; height: 44px; border-radius: 10px; border: 1px solid var(--line); background: var(--cream); font-size: 22px; font-weight: 700; color: var(--wool-dk); }
 .sc-btn:active { transform: scale(.95); }

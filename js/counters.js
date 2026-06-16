@@ -123,10 +123,10 @@ async function fillPhotos() {
 function renderList() {
   node.innerHTML = '';
   node.append(E('div', 'pagehead', `<h1>Dine projekter</h1><p class="hint">Tæl omgange uden at miste tællingen — skærmen forbliver tændt mens du strikker.</p>`));
-  if (projects.length) node.append(statusCard());
   const active = projects.filter((p) => !p.done);
   const done = projects.filter((p) => p.done);
   if (!projects.length) node.append(E('p', 'empty', 'Ingen projekter endnu. Start dit første herunder.'));
+  // The projects ARE the task — lead with them.
   if (active.length) node.append(E('h2', 'sechead', 'Igangværende'));
   else if (projects.length) node.append(E('p', 'empty small', 'Ingen igangværende projekter — alt er færdigt'));
   const list = E('div', 'projlist');
@@ -135,6 +135,8 @@ function renderList() {
   const add = E('button', 'primary big', '+ Nyt projekt');
   add.onclick = () => projectModal();
   node.append(add);
+  // Stats are a summary, not the headline — show them below the projects.
+  if (projects.length) node.append(statusCard());
   if (done.length) {
     node.append(E('h2', 'sechead', `✓ Færdige projekter (${done.length})`));
     const dl = E('div', 'projlist');
@@ -190,8 +192,7 @@ function renderDetail() {
     extras.forEach((c) => {
       const row = E('div', 'subcounter' + (c.follow ? ' follow' : ''));
       row.innerHTML = `<div class="sc-info"><b>${esc(c.label)}</b>
-        <span class="sc-val">${c.value}${c.wrapAt ? `/${c.wrapAt} · ${c.repeats || 0}×` : ''}</span>
-        ${c.follow ? '<span class="sc-tag">følger hovedtæller</span>' : ''}</div>`;
+        <span class="sc-sub"><b class="sc-num">${c.value}</b>${c.wrapAt ? ` / ${c.wrapAt} · ${c.repeats || 0} rapport${(c.repeats || 0) === 1 ? '' : 'er'}` : ''}${c.follow ? ' · følger hovedtæller' : ''}</span></div>`;
       const ctr = E('div', 'sc-ctrls');
       if (!c.follow) {
         const m = E('button', 'sc-btn', '−'); m.onclick = () => tap(p, c, -1);
@@ -211,9 +212,11 @@ function renderDetail() {
     if (p.done) { p.done = false; delete p.finishedAt; save(); renderDetail(); }
     else finishModal(p);
   };
-  const reset = E('button', 'ghost wide subtle', 'Nulstil alle tællere'); reset.onclick = () => { if (confirm('Nulstil alle tællere i dette projekt?')) { p.counters.forEach((c) => { c.value = c.wrapAt ? 1 : 0; c.repeats = 0; }); save(); renderDetail(); } };
-  const delp = E('button', 'ghost wide danger', 'Slet projekt'); delp.onclick = () => { if (confirm('Slet projektet "' + p.name + '"?')) { projects = projects.filter((x) => x !== p); activeId = null; save(); releaseWake(); renderList(); } };
-  node.append(addc, doneBtn, reset, delp);
+  node.append(addc, doneBtn);
+  // destructive actions, de-emphasised and set apart so they don't read as primary
+  const reset = E('button', 'minor', 'Nulstil tællere'); reset.onclick = () => { if (confirm('Nulstil alle tællere i dette projekt?')) { p.counters.forEach((c) => { c.value = c.wrapAt ? 1 : 0; c.repeats = 0; }); save(); renderDetail(); } };
+  const delp = E('button', 'minor danger', 'Slet projekt'); delp.onclick = () => { if (confirm('Slet projektet "' + p.name + '"?')) { projects = projects.filter((x) => x !== p); activeId = null; save(); releaseWake(); renderList(); } };
+  const dz = E('div', 'danger-row'); dz.append(reset, delp); node.append(dz);
 }
 
 /* ---------------- modals ---------------- */
