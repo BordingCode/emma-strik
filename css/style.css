@@ -198,6 +198,15 @@ input, textarea { font-family: inherit; }
 .form select { display: block; width: 100%; margin-top: 4px; background: var(--cream); border: 1px solid var(--line); border-radius: 10px; padding: 12px; font-size: 16px; color: var(--ink); }
 .form input[type=file] { display: block; width: 100%; margin-top: 4px; font-size: 14px; }
 
+/* batch upload: one editable name per chosen file */
+.up-list { margin: 0 0 12px; max-height: 40vh; overflow-y: auto; }
+.up-count { font-size: 13px; color: var(--muted); margin-bottom: 8px; }
+.up-name-row { display: block; font-size: 13px; color: var(--muted); margin-bottom: 10px;
+  background: var(--cream); border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; }
+.up-name-row .up-fn { display: block; color: var(--ink); font-size: 12px; margin-bottom: 4px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.up-name-row input[type=text] { margin-top: 0; }
+
 /* ============ calculator info button + info sheets ============ */
 .calchead { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .calchead h2 { margin-bottom: 0; }

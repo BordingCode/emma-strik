@@ -315,22 +315,58 @@ function newCollection(addPattern) {
 
 function uploadModal() {
   const f = E('div', 'form');
-  f.innerHTML = `<h2>Tilføj egen opskrift</h2>
-    <p class="hint" style="margin-bottom:10px">Vælg en PDF eller et billede fra din telefon. Den gemmes på din enhed.</p>
-    <label>Fil<input id="up-file" type="file" accept="application/pdf,image/*"></label>
-    <label>Navn<input id="up-name" type="text" maxlength="50" placeholder="fx Mormors trøje"></label>
-    <label>Designer (valgfri)<input id="up-designer" type="text" maxlength="40"></label>
-    <label>Kategori<select id="up-cat">${CATEGORIES.filter((c) => c.id !== 'all').map((c) => `<option value="${c.id}">${c.label}</option>`).join('')}</select></label>
+  f.innerHTML = `<h2>Tilføj egne opskrifter</h2>
+    <p class="hint" style="margin-bottom:10px">Vælg en eller flere PDF-filer eller billeder fra din telefon. De gemmes på din enhed.</p>
+    <label>Filer<input id="up-file" type="file" accept="application/pdf,image/*" multiple></label>
+    <div id="up-list" class="up-list" hidden></div>
+    <label>Designer (valgfri, fælles for alle)<input id="up-designer" type="text" maxlength="40"></label>
+    <label>Kategori (fælles for alle)<select id="up-cat">${CATEGORIES.filter((c) => c.id !== 'all').map((c) => `<option value="${c.id}">${esc(c.label)}</option>`).join('')}</select></label>
+    <div id="up-status" class="hint" hidden style="margin-bottom:8px"></div>
     <div class="form-actions"><button class="ghost cancel">Annuller</button><button class="primary ok">Gem</button></div>`;
   const m = M(f);
-  f.querySelector('.cancel').onclick = () => m.close();
-  f.querySelector('.ok').onclick = async () => {
-    const file = f.querySelector('#up-file').files[0];
-    if (!file) { alert('Vælg en fil først.'); return; }
-    const name = f.querySelector('#up-name').value.trim() || file.name.replace(/\.[^.]+$/, '');
-    const rec = { id: uid(), name, designer: f.querySelector('#up-designer').value.trim(), category: f.querySelector('#up-cat').value, mime: file.type || 'application/octet-stream', blob: file, addedAt: Date.now() };
-    if ((rec.mime || '').includes('pdf')) { try { rec.thumb = await pdfThumb(file); } catch (e) {} }
-    try { await putUpload(rec); uploads.push(rec); m.close(); filters.view = 'mine'; filters.mine = 'all'; render(); }
-    catch (e) { alert('Kunne ikke gemme filen (måske er den for stor til din browsers lager).'); }
+  const fileInp = f.querySelector('#up-file');
+  const list = f.querySelector('#up-list');
+  const okBtn = f.querySelector('.ok');
+  const cancelBtn = f.querySelector('.cancel');
+  const status = f.querySelector('#up-status');
+  const baseName = (fn) => fn.replace(/\.[^.]+$/, '');
+
+  // After picking file(s), show one editable name per file (default = filename).
+  fileInp.onchange = () => {
+    const files = [...fileInp.files];
+    if (!files.length) { list.hidden = true; list.innerHTML = ''; okBtn.textContent = 'Gem'; return; }
+    list.hidden = false;
+    const head = files.length > 1 ? `<div class="up-count">${files.length} filer valgt — ret gerne navnene:</div>` : '';
+    list.innerHTML = head + files.map((file, i) =>
+      `<label class="up-name-row">${files.length > 1 ? `<span class="up-fn">${esc(file.name)}</span>` : 'Navn'}` +
+      `<input type="text" maxlength="50" data-i="${i}" value="${esc(baseName(file.name))}" placeholder="fx Mormors trøje"></label>`
+    ).join('');
+    okBtn.textContent = files.length > 1 ? `Gem ${files.length} opskrifter` : 'Gem';
+  };
+
+  cancelBtn.onclick = () => m.close();
+  okBtn.onclick = async () => {
+    const files = [...fileInp.files];
+    if (!files.length) { alert('Vælg mindst én fil først.'); return; }
+    const nameInputs = [...list.querySelectorAll('input[data-i]')];
+    const designer = f.querySelector('#up-designer').value.trim();
+    const category = f.querySelector('#up-cat').value;
+    okBtn.disabled = true; cancelBtn.disabled = true; fileInp.disabled = true;
+    status.hidden = false;
+    let saved = 0; const failed = [];
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      if (files.length > 1) status.textContent = `Gemmer ${i + 1} af ${files.length}…`;
+      const inp = nameInputs.find((n) => +n.dataset.i === i);
+      const name = (inp && inp.value.trim()) || baseName(file.name);
+      const rec = { id: uid(), name, designer, category, mime: file.type || 'application/octet-stream', blob: file, addedAt: Date.now() + i };
+      if ((rec.mime || '').includes('pdf')) { try { rec.thumb = await pdfThumb(file); } catch (e) {} }
+      try { await putUpload(rec); uploads.push(rec); saved++; }
+      catch (e) { failed.push(file.name); }
+    }
+    m.close(); filters.view = 'mine'; filters.mine = 'all'; render();
+    if (failed.length) {
+      alert(`${saved} opskrift${saved === 1 ? '' : 'er'} gemt.\n${failed.length} kunne ikke gemmes (måske for store til lageret):\n` + failed.join('\n'));
+    }
   };
 }

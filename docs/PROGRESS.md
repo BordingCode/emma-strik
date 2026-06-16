@@ -123,6 +123,11 @@ Counter + calculators + 64-pattern curated gallery. To grow gallery: add verifie
   year that has finished projects) + a **month dropdown** (Hele året / Jan–Dec, disabled when "Alle år").
   Meter/gram/færdige + the photo strip all respect the chosen period. Verified: 2026=1050m, 2025=300m,
   all=1350m, March-2025=1, April-2025=0; info block + form fields present; 0 errors.
+- **Batch upload (Emma request)**: "Tilføj egne opskrifter" now accepts **multiple** PDF/image files at
+  once. After picking, each file gets an editable name row (default = filename), with one shared Designer +
+  Kategori for the whole batch; saves in a loop with "Gemmer N af M…" progress, PDF thumbnails per file,
+  per-file failure reporting. Verified in browser: 3 PDFs → 3 separate "Mine opskrifter" cards, all persisted
+  to IndexedDB with blobs + thumbs. (gallery.js `uploadModal`, sw.js cache → v22.)
 - Backups now also include `videos` + `ownerName`.
 - NOTE (already built, confirmed by Emma's emails 12/13/15/16): reader ruler+counter+annotation, calculators,
   owned-recipe categories, category icons — all done in earlier phases.
