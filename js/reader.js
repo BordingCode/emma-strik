@@ -5,7 +5,7 @@ import { putUpload } from './idb.js';
 import { videosForPattern, categoryIdsForPattern } from './videos.js';
 
 const E = (t, c, h) => { const e = document.createElement(t); if (c) e.className = c; if (h != null) e.innerHTML = h; return e; };
-const RENDER_W = 1000;
+const RENDER_W = 1400;   // render PDFs crisp so they stay sharp when zoomed/pinched
 const RS = (p) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${p}</svg>`;
 const RI = {
   ruler: RS('<rect x="3" y="8.5" width="18" height="7" rx="1"/><path d="M7 8.5v3M11 8.5v4M15 8.5v3M19 8.5v4"/>'),
@@ -14,6 +14,9 @@ const RI = {
   pencil: RS('<path d="M5 19l1.2-4L15 6.2l2.8 2.8L9 17.8z"/><path d="M14 7l3 3"/>'),
   eraser: RS('<path d="M8 17 4.5 13.5 12 6l4.5 4.5L11.5 17z"/><path d="M6 19h11"/>'),
   trash: RS('<path d="M5 7h14M9.5 7V5h5v2M7 7l1 12h8l1-12"/>'),
+  zin: RS('<circle cx="11" cy="11" r="7"/><path d="M11 8v6M8 11h6M20 20l-3.5-3.5"/>'),
+  zout: RS('<circle cx="11" cy="11" r="7"/><path d="M8 11h6M20 20l-3.5-3.5"/>'),
+  more: '<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="19" cy="12" r="1.7"/></svg>',
 };
 
 // progress (optional) = { obj, save } — where the row-count + ruler/scroll/zoom are remembered.
@@ -27,17 +30,20 @@ export async function openReader(upload, progress) {
 
   ov.innerHTML = `
     <div class="reader-top">
-      <button class="rbtn close">‹ Luk</button>
+      <button class="rbtn rclose" aria-label="Luk">‹</button>
       <span class="rtitle">${(upload.name || 'Opskrift').replace(/[<>&]/g, '')}</span>
       <div class="rtools">
         <button class="rbtn lbl rulertoggle" aria-label="Lineal"><span>${RI.ruler}</span><small>Lineal</small></button>
         <button class="rbtn lbl tool" data-m="hi" aria-label="Overstregning"><span>${RI.marker}</span><small>Marker</small></button>
-        <button class="rbtn lbl tool" data-m="pen" aria-label="Blyant"><span>${RI.pencil}</span><small>Blyant</small></button>
-        <button class="rbtn lbl tool" data-m="eraser" aria-label="Viskelæder"><span>${RI.eraser}</span><small>Slet</small></button>
-        <button class="rbtn lbl zout" aria-label="Zoom ud"><span>−</span><small>Zoom</small></button>
-        <button class="rbtn lbl zin" aria-label="Zoom ind"><span>＋</span><small>Zoom</small></button>
-        <button class="rbtn lbl clear" aria-label="Ryd tegning"><span>${RI.trash}</span><small>Ryd</small></button>
-        <button class="rbtn lbl videobtn" aria-label="Videoer"><span>${RI.video}</span><small>Video</small></button>
+        <button class="rbtn lbl moretoggle" aria-label="Flere værktøjer"><span>${RI.more}</span><small>Mere</small></button>
+      </div>
+      <div class="rmenu" hidden>
+        <button class="rmenu-row zin"><span class="rmi">${RI.zin}</span>Zoom ind</button>
+        <button class="rmenu-row zout"><span class="rmi">${RI.zout}</span>Zoom ud</button>
+        <button class="rmenu-row tool" data-m="pen"><span class="rmi">${RI.pencil}</span>Blyant</button>
+        <button class="rmenu-row tool" data-m="eraser"><span class="rmi">${RI.eraser}</span>Slet</button>
+        <button class="rmenu-row clear"><span class="rmi">${RI.trash}</span>Ryd tegning</button>
+        <button class="rmenu-row videobtn"><span class="rmi">${RI.video}</span>Videoer</button>
       </div>
     </div>
     <div class="reader-stage">
@@ -109,20 +115,28 @@ export async function openReader(upload, progress) {
   }
 
   // tools (pen/hi/eraser are exclusive draw modes; ruler is an independent toggle)
+  // overflow ("Mere") menu holds the occasional tools so the bar stays one calm row
+  const moreBtn = ov.querySelector('.moretoggle');
+  const menu = ov.querySelector('.rmenu');
+  const closeMenu = () => { menu.hidden = true; moreBtn.classList.remove('open'); };
+  moreBtn.onclick = (e) => { e.stopPropagation(); menu.hidden = !menu.hidden; moreBtn.classList.toggle('open', !menu.hidden); };
+
   function setMode(m) {
     mode = (mode === m && m !== 'pan') ? 'pan' : m;
     ov.querySelectorAll('.tool').forEach((b) => b.classList.toggle('on', b.dataset.m === mode));
+    moreBtn.classList.toggle('tool-active', mode === 'pen' || mode === 'eraser');  // show a tool is live in the menu
     const drawing = mode === 'pen' || mode === 'hi' || mode === 'eraser';
     canvas.style.pointerEvents = drawing ? 'auto' : 'none';
     canvas.style.touchAction = drawing ? 'none' : 'auto';
   }
-  ov.querySelectorAll('.tool').forEach((b) => b.onclick = () => setMode(b.dataset.m));
+  ov.querySelectorAll('.tool').forEach((b) => b.onclick = () => { setMode(b.dataset.m); closeMenu(); });
   const rt = ov.querySelector('.rulertoggle');
   rt.onclick = () => { ruler.hidden = !ruler.hidden; rt.classList.toggle('on', !ruler.hidden); placeRuler(); };
-  ov.querySelector('.zin').onclick = () => { scale = Math.min(4, scale + 0.25); applyScale(); };
+  ov.querySelector('.zin').onclick = () => { scale = Math.min(4, scale + 0.25); applyScale(); };   // menu stays open for repeated zoom
   ov.querySelector('.zout').onclick = () => { scale = Math.max(1, scale - 0.25); applyScale(); };
-  ov.querySelector('.clear').onclick = () => { if (confirm('Ryd dine tegninger på denne opskrift?')) ctx.clearRect(0, 0, canvas.width, canvas.height); };
-  ov.querySelector('.videobtn').onclick = () => showVideos();
+  ov.querySelector('.clear').onclick = () => { closeMenu(); if (confirm('Ryd dine tegninger på denne opskrift?')) ctx.clearRect(0, 0, canvas.width, canvas.height); };
+  ov.querySelector('.videobtn').onclick = () => { closeMenu(); showVideos(); };
+  stage.addEventListener('pointerdown', closeMenu);   // tapping the pattern closes the menu
 
   function showVideos() {
     const pid = 'up:' + upload.id;
@@ -193,9 +207,10 @@ export async function openReader(upload, progress) {
   ruler.addEventListener('pointermove', (e) => { if (!rdrag) return; const top = Math.max(0, Math.min(wrap.clientHeight - ruler.offsetHeight, rt0 + (e.clientY - ry0))); ruler.style.top = top + 'px'; rulerFrac = top / wrap.clientHeight; });
   ruler.addEventListener('pointerup', () => { rdrag = false; });
 
-  // counter
-  ov.querySelector('.plus').onclick = () => { count++; cntEl.textContent = count; saveState(); };
-  ov.querySelector('.minus').onclick = () => { count = Math.max(0, count - 1); cntEl.textContent = count; saveState(); };
+  // counter (with a gentle pop, matching the main app)
+  const bump = (el) => { el.style.animation = 'none'; void el.offsetWidth; el.style.animation = 'countpop .14s ease-out'; };
+  ov.querySelector('.plus').onclick = () => { count++; cntEl.textContent = count; bump(cntEl); saveState(); };
+  ov.querySelector('.minus').onclick = () => { count = Math.max(0, count - 1); cntEl.textContent = count; bump(cntEl); saveState(); };
 
   async function close() {
     clearTimeout(saveT);
@@ -203,7 +218,7 @@ export async function openReader(upload, progress) {
     await commit();
     objURLs.forEach((u) => URL.revokeObjectURL(u)); ov.remove();
   }
-  ov.querySelector('.close').onclick = close;
+  ov.querySelector('.rclose').onclick = close;
   addEventListener('resize', placeRuler);
   setMode('pan');
 }
