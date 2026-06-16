@@ -20,7 +20,8 @@
   --shadow: var(--sh-1);            /* back-compat alias used throughout */
   /* gradients */
   --grad-wool: linear-gradient(180deg, var(--wool-lt), var(--wool) 55%, var(--wool-dk));
-  --grad-topbar: linear-gradient(165deg, #b96c4f 0%, #a85d44 55%, #934e38 100%);
+  /* header uses the exact brand terracotta tokens (matches buttons & accents) */
+  --grad-topbar: linear-gradient(180deg, var(--wool), var(--wool-dk));
   /* type */
   --font-body: 'Segoe UI', system-ui, -apple-system, 'Helvetica Neue', sans-serif;
   --font-head: 'Iowan Old Style', 'Palatino Linotype', Palatino, 'Cochin', Georgia, 'Times New Roman', serif;
@@ -48,10 +49,13 @@ h1, h2, h3, .brand { font-family: var(--font-head); letter-spacing: .2px; }
   box-shadow: 0 0 60px rgba(60,40,20,.22); }
 
 /* top bar */
-.topbar { flex: 0 0 auto; display: flex; align-items: center; justify-content: center; gap: 9px;
+.topbar { flex: 0 0 auto; position: relative; display: flex; align-items: center; justify-content: center; gap: 9px;
   padding: 14px 12px; color: #fff;
   background: var(--grain), var(--grad-topbar);
-  box-shadow: var(--sh-2), inset 0 -1px 0 rgba(0,0,0,.10), inset 0 1px 0 rgba(255,255,255,.12); }
+  box-shadow: var(--sh-2), inset 0 1px 0 rgba(255,255,255,.12); }
+/* sage accent line echoes the terracotta→sage accent used under page titles */
+.topbar::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 3px;
+  background: linear-gradient(90deg, var(--sage), var(--sage-dk)); }
 .brand { font-size: 21px; font-weight: 600; letter-spacing: .3px; text-shadow: 0 1px 1px rgba(60,30,15,.22); }
 .brandicon { display: inline-flex; }
 .brandicon svg { width: 22px; height: 22px; }
