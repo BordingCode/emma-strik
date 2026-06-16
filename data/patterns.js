@@ -261,6 +261,28 @@ export const PATTERNS = [
     url: 'https://www.ravelry.com/patterns/library/four-points-baby-blanket-in-super-soft-merino',
     image: 'https://images4-f.ravelrycache.com/uploads/purlsoho/505301848/four-points-blankets-ssm-600-47_small2.jpg',
     category: 'home', yarnWeight: 'Chunky', difficulty: 'begynder', free: true, lang: 'en' },
+
+  // ---- Danish favourites: the patterns Danish knitters knit most (web-verified June 2026) ----
+  // PetiteKnit dominates DK; Filcolana = the big free patterns; Önling/Rikke Jönsson = beginner-loved.
+  { id: 'anker-tee', name: "Anker's Tee", designer: 'PetiteKnit', source: 'PetiteKnit',
+    url: 'https://www.petiteknit.com/products/anker-tee',
+    image: 'https://www.petiteknit.com/cdn/shop/files/ankeroglyonjunior_1024x1024.jpg?v=1693984348',
+    category: 'sweater', yarnWeight: 'Fingering', difficulty: 'let øvet', free: false, lang: 'da' },
+  { id: 'oslo-hue', name: 'Oslo Hue (Oslo Hat)', designer: 'PetiteKnit', source: 'PetiteKnit',
+    url: 'https://www.petiteknit.com/products/oslo-hue',
+    image: 'https://www.petiteknit.com/cdn/shop/files/oslohuebrunskov4_1024x1024.jpg?v=1759406964',
+    category: 'accessory', yarnWeight: 'Fingering', difficulty: 'begynder', free: false, lang: 'da' },
+  { id: 'everyday-socks', name: 'Everyday Socks', designer: 'PetiteKnit', source: 'PetiteKnit',
+    url: 'https://www.petiteknit.com/products/everyday-socks',
+    image: 'https://www.petiteknit.com/cdn/shop/products/everyday5_4e78619f-7fb3-4c6d-8ca5-9bc23467a77e_1024x1024.jpg?v=1741343764',
+    category: 'accessory', yarnWeight: 'Fingering', difficulty: 'let øvet', free: false, lang: 'da' },
+  { id: 'esplanaden', name: 'Esplanaden', designer: 'Ditte Lerche', source: 'Filcolana',
+    url: 'https://www.ravelry.com/patterns/library/esplanaden',
+    image: null, category: 'sweater', yarnWeight: 'Fingering', difficulty: 'let øvet', free: true, lang: 'da' },
+  { id: 'rikke-bloom-sweater', name: 'Rikke Bloom Sweater', designer: 'Rikke Jönsson', source: 'Önling',
+    url: 'https://www.oenling.dk/products/rikke-bloom-sweater-af-rikke-jonsson-strikkeopskrift-dk',
+    image: 'https://www.oenling.dk/cdn/shop/files/rikke-bloom-sweater-af-rikke-jonsson-strikkekit-i-no-3-6814741_1800x1800.jpg?v=1763175770',
+    category: 'sweater', yarnWeight: 'Fingering', difficulty: 'let øvet', free: false, lang: 'da' },
 ];
 
 export const CATEGORIES = [
