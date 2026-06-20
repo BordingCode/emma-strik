@@ -6,6 +6,7 @@ import { initStash } from './stash.js';
 import { exportData } from './backup.js';
 import { store } from './store.js';
 import { applyTheme } from './theme.js';
+import { isLinked, pullIfNewer } from './sync.js';
 
 export const el = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; };
 
@@ -117,3 +118,8 @@ requestPersist();
 maybeBackupReminder();
 if ('serviceWorker' in navigator) addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
 window.__es = { show, current };
+
+// Cloud sync: pull on open + when returning to the app. Reload if it brought in newer data.
+async function syncCheck() { try { if (isLinked() && await pullIfNewer()) location.reload(); } catch (e) {} }
+if (isLinked()) syncCheck();
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') syncCheck(); });

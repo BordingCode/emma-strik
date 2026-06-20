@@ -555,3 +555,17 @@ h1, h2, h3, .brand { font-family: var(--font-head); letter-spacing: .2px; }
 .themecard .tc-check { font-size: 12px; color: var(--wool-dk); height: 14px; }
 .tc-swatch { display: flex; gap: 3px; }
 .tc-dot { width: 16px; height: 16px; border-radius: 50%; border: 1px solid rgba(0,0,0,.08); }
+
+/* ---- device sync ---- */
+.syncbox { display: flex; align-items: flex-start; gap: 11px; background: var(--sage-soft);
+  border: 1px solid var(--line); border-radius: 14px; padding: 13px 14px; margin: 4px 0 8px; }
+.sync-dot { flex: 0 0 auto; width: 11px; height: 11px; border-radius: 50%; margin-top: 4px;
+  background: var(--sage-dk); box-shadow: 0 0 0 3px color-mix(in srgb, var(--sage-dk) 22%, transparent); }
+.sync-info { display: flex; flex-direction: column; gap: 1px; }
+.sync-info b { font-size: 15px; }
+.sync-sub { font-size: 13px; color: var(--muted); }
+.sync-sub code { font-family: ui-monospace, Menlo, Consolas, monospace; color: var(--ink-soft); letter-spacing: .5px; }
+.hint.warn { color: var(--wool-dk); background: var(--wool-soft); border-radius: 10px; padding: 9px 11px; }
+.codebig { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 26px; font-weight: 700;
+  letter-spacing: 2px; text-align: center; color: var(--wool-dk); background: var(--sunken);
+  border: 1.5px dashed var(--line); border-radius: 12px; padding: 16px 10px; margin: 6px 0 10px; user-select: all; -webkit-user-select: all; }
