@@ -3,6 +3,7 @@ import { initCounters } from './counters.js';
 import { initCalculators } from './calculators.js';
 import { initGallery } from './gallery.js';
 import { initStash } from './stash.js';
+import { initSettings } from './settings.js';
 import { exportData } from './backup.js';
 import { store } from './store.js';
 import { applyTheme } from './theme.js';
@@ -68,6 +69,9 @@ function build() {
   document.title = brandTitle();
   brandEl.title = 'Tryk 3 gange for at skifte navn';
   brandEl.addEventListener('click', () => { brandEl._n = (brandEl._n || 0) + 1; clearTimeout(brandEl._t); if (brandEl._n >= 3) { brandEl._n = 0; renameOwner(); } else brandEl._t = setTimeout(() => { brandEl._n = 0; }, 600); });
+  // gear → app-wide settings (theme, sync, backup)
+  const gear = el('button', 'gearbtn', ICONS.gear); gear.setAttribute('aria-label', 'Indstillinger'); gear.title = 'Indstillinger';
+  gear.onclick = () => show('settings'); header.append(gear);
   const main = el('main', 'view');
   const nav = el('nav', 'bottomnav');
   app.append(header, main, nav);
@@ -80,17 +84,23 @@ function build() {
     btn.onclick = () => show(s.id);
     nav.append(btn);
   });
+  // settings page — reached via the gear, not in the bottom nav
+  const sNode = el('section', 'page'); sNode.id = 'page-settings'; sNode.hidden = true;
+  main.append(sNode); views['settings'] = { sec: { id: 'settings', init: initSettings }, node: sNode, built: false };
   show('taeller');
 }
 
+let prevTab = 'taeller'; // where to return to when leaving settings
 function show(id) {
   if (current === id) return;
+  if (id === 'settings' && current && current !== 'settings') prevTab = current;
   current = id;
   Object.values(views).forEach((v) => { v.node.hidden = v.sec.id !== id; });
   document.querySelectorAll('.navbtn').forEach((b) => b.classList.toggle('active', b.dataset.id === id));
   const v = views[id];
-  if (!v.built) { v.sec.init(v.node, { el, modal }); v.built = true; }
-  else if (v.sec.id !== 'taeller') { /* sections re-render on init only; counters self-manages */ }
+  const helpers = { el, modal, back: () => show(prevTab) };
+  if (!v.built) { v.sec.init(v.node, helpers); v.built = true; }
+  else if (v.sec.id === 'settings') { v.sec.init(v.node, helpers); } // refresh sync time/theme on each open
   window.__es && (window.__es.current = id);
 }
 
