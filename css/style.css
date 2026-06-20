@@ -7,6 +7,7 @@
   --line: #e6dac6; --line-soft: #f0e8d8;
   /* tonal surfaces — elevation read partly through tone */
   --bg: #e4d7bf; --cream: #f5eee1; --sunken: #efe7d7; --paper: #fffdf8; --raised: #fffefb;
+  --bg-glow: #ece0cb; /* soft glow at the top of the page (themed) */
   /* primary terracotta ramp */
   --wool: #b0654a; --wool-dk: #8d4c37; --wool-lt: #c8825f; --wool-soft: #f1ddd0;
   /* secondary sage + tertiary honey + accents */
@@ -32,7 +33,7 @@
 html, body { height: 100%; }
 body { background: var(--bg); color: var(--ink); font-family: var(--font-body);
   -webkit-user-select: none; user-select: none;
-  background-image: radial-gradient(120% 80% at 50% 0%, #ece0cb 0%, var(--bg) 70%); }
+  background-image: radial-gradient(120% 80% at 50% 0%, var(--bg-glow) 0%, var(--bg) 70%); }
 button { font-family: inherit; cursor: pointer; color: inherit; }
 input, textarea { font-family: inherit; }
 h1, h2, h3, .brand { font-family: var(--font-head); letter-spacing: .2px; }
@@ -487,3 +488,70 @@ h1, h2, h3, .brand { font-family: var(--font-head); letter-spacing: .2px; }
 .ut-btn { flex: 1; border: none; background: none; border-radius: 9px; padding: 9px; font-size: 14px;
   font-weight: 600; color: var(--muted); cursor: pointer; }
 .ut-btn.on { background: var(--paper); color: var(--wool-dk); box-shadow: var(--sh-1); }
+
+/* ============================================================
+   THEMES — set data-theme on <html>. Default (no attr) = Uld.
+   Each theme retunes the neutral surfaces + the primary accent;
+   the small sage/gold/rose accents are kept (used sparingly).
+   ============================================================ */
+[data-theme="lavendel"] {
+  --ink: #322a36; --ink-soft: #564c5c; --muted: #867a8c; --faint: #a89dae;
+  --line: #e4d8ea; --line-soft: #efe8f3;
+  --bg: #ddd2e6; --cream: #f4eef8; --sunken: #ece4f1; --paper: #fffdff; --raised: #fffeff;
+  --bg-glow: #e8ddf0;
+  --wool: #8a6aa6; --wool-dk: #6f5189; --wool-lt: #a385bb; --wool-soft: #ece1f3;
+  --sage: #5f7a57; --sage-dk: #4d6646; --sage-soft: #e7eede;
+  --gold: #c79a4f; --gold-dk: #8f6f25; --gold-soft: #f3ead2;
+}
+[data-theme="havbla"] {
+  --ink: #222b33; --ink-soft: #43525c; --muted: #6f7e88; --faint: #9aa7af;
+  --line: #d4e0e6; --line-soft: #e6eef2;
+  --bg: #cfdde4; --cream: #eef4f7; --sunken: #e2ecf0; --paper: #fbfdfe; --raised: #ffffff;
+  --bg-glow: #dbe7ed;
+  --wool: #3f7193; --wool-dk: #2d5a79; --wool-lt: #5a8aab; --wool-soft: #dceaf1;
+  --sage: #4f8079; --sage-dk: #3f6a63; --sage-soft: #dfeeeb;
+  --gold: #c79a4f; --gold-dk: #8f6f25; --gold-soft: #f0ead7;
+}
+[data-theme="skovgron"] {
+  --ink: #2a3127; --ink-soft: #4b5544; --muted: #79836f; --faint: #a3ad98;
+  --line: #dde6cf; --line-soft: #ebf0e1;
+  --bg: #d6e0c6; --cream: #f1f5e8; --sunken: #e6ecd8; --paper: #fdfdf7; --raised: #ffffff;
+  --bg-glow: #e1ead2;
+  --wool: #5f7a4d; --wool-dk: #4b6440; --wool-lt: #7a9466; --wool-soft: #e3ecd6;
+  --sage: #8a7d3f; --sage-dk: #6f6430; --sage-soft: #eee9cf;
+  --gold: #c79a4f; --gold-dk: #8f6f25; --gold-soft: #f1ebd5;
+}
+[data-theme="rosenkvarts"] {
+  --ink: #3a2a2c; --ink-soft: #5e4a4c; --muted: #8d7678; --faint: #b59ea0;
+  --line: #eed9da; --line-soft: #f6e8e9;
+  --bg: #eed3d2; --cream: #fcefee; --sunken: #f5e2e1; --paper: #fffdfc; --raised: #ffffff;
+  --bg-glow: #f3dedd;
+  --wool: #bd6a73; --wool-dk: #9c4f5a; --wool-lt: #d18893; --wool-soft: #f6dde0;
+  --sage: #6f8a6a; --sage-dk: #5a7355; --sage-soft: #e6efe2;
+  --gold: #c79a4f; --gold-dk: #8f6f25; --gold-soft: #f5ecd6;
+}
+/* Aften — warm dark mode. Inverts the neutral ramp; keeps warm light accents. */
+[data-theme="aften"] {
+  --ink: #f0e7da; --ink-soft: #cbbfae; --muted: #9c8f7e; --faint: #776c5d;
+  --line: #3a3229; --line-soft: #2e2922;
+  --bg: #1c1916; --cream: #272320; --sunken: #221e1b; --paper: #2b2622; --raised: #332d28;
+  --bg-glow: #2a221a;
+  --wool: #c8825f; --wool-dk: #b0654a; --wool-lt: #d89a78; --wool-soft: #3d322a;
+  --sage: #7f9a76; --sage-dk: #6a855f; --sage-soft: #2f352b;
+  --rose: #cf9b8e; --gold: #d6b06a; --gold-dk: #b78f48; --gold-soft: #352e22;
+  --danger: #d9685a;
+  --sh-1: 0 1px 2px rgba(0,0,0,.30), 0 1px 3px rgba(0,0,0,.30);
+  --sh-2: 0 2px 6px rgba(0,0,0,.35), 0 6px 16px rgba(0,0,0,.40);
+  --sh-3: 0 8px 20px rgba(0,0,0,.45), 0 18px 38px rgba(0,0,0,.50);
+  --grad-topbar: linear-gradient(180deg, #4a3d31, #352c24);
+}
+
+/* theme picker swatches (Garn ▸ Udseende) */
+.themegrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 4px 0 8px; }
+.themecard { display: flex; flex-direction: column; gap: 7px; align-items: center; background: var(--paper);
+  border: 1.5px solid var(--line); border-radius: 14px; padding: 12px 8px; cursor: pointer; color: var(--ink-soft); }
+.themecard.on { border-color: var(--wool); box-shadow: 0 0 0 2px var(--wool-soft); }
+.themecard .tc-name { font-size: 13px; font-weight: 600; }
+.themecard .tc-check { font-size: 12px; color: var(--wool-dk); height: 14px; }
+.tc-swatch { display: flex; gap: 3px; }
+.tc-dot { width: 16px; height: 16px; border-radius: 50%; border: 1px solid rgba(0,0,0,.08); }

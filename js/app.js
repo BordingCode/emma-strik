@@ -5,6 +5,7 @@ import { initGallery } from './gallery.js';
 import { initStash } from './stash.js';
 import { exportData } from './backup.js';
 import { store } from './store.js';
+import { applyTheme } from './theme.js';
 
 export const el = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; };
 
@@ -110,6 +111,7 @@ function maybeBackupReminder() {
   bar.append(go, x); app.insertBefore(bar, app.children[1]); // under the topbar
 }
 
+applyTheme(store.get('theme', ''), false);
 build();
 requestPersist();
 maybeBackupReminder();

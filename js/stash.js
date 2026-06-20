@@ -1,6 +1,7 @@
 // Garn & grej — Emma's yarn stash + tools/needles. Stored on-device (localStorage).
 import { store, uid } from './store.js';
 import { exportData, importData } from './backup.js';
+import { THEMES, applyTheme, currentTheme } from './theme.js';
 
 let node, M;
 let stash, tools;
@@ -45,6 +46,20 @@ function render() {
   });
   node.append(tl);
   const addT = E('button', 'ghost wide', '+ Tilføj grej'); addT.onclick = () => toolModal(); node.append(addT);
+
+  // ---- appearance / theme picker ----
+  node.append(E('h2', 'sechead', 'Udseende'));
+  node.append(E('p', 'hint', 'Vælg et tema. Det skifter med det samme og huskes på denne enhed.'));
+  const grid = E('div', 'themegrid');
+  const cur = currentTheme();
+  THEMES.forEach((t) => {
+    const card = E('button', 'themecard' + (t.id === cur ? ' on' : ''),
+      `<span class="tc-swatch">${t.dots.map((d) => `<span class="tc-dot" style="background:${d}"></span>`).join('')}</span>
+       <span class="tc-name">${esc(t.name)}</span><span class="tc-check">${t.id === cur ? '✓ valgt' : ''}</span>`);
+    card.onclick = () => { applyTheme(t.id); render(); };
+    grid.append(card);
+  });
+  node.append(grid);
 
   // ---- backup (was hidden behind the gear icon; now clearly here too) ----
   node.append(E('h2', 'sechead', 'Sikkerhedskopi'));
