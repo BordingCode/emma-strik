@@ -38,6 +38,15 @@ function groups(total, n) {
   return out;
 }
 function summarize(sizes) { const m = {}; sizes.forEach((s) => m[s] = (m[s] || 0) + 1); return Object.keys(m).map(Number).sort((a, b) => a - b).map((s) => `${m[s]}× ${s} m`).join(' og '); }
+// Don't write the whole pattern out — group identical steps and say how many times to repeat.
+function compactSeq(sizes, unit) {
+  const m = {}; sizes.forEach((s) => m[s] = (m[s] || 0) + 1);
+  const keys = Object.keys(m).map(Number).sort((a, b) => a - b);
+  const part = (s) => { const n = m[s]; return n === 1 ? `<b>${unit(s)}</b>` : `gentag <b>${unit(s)}</b> ${n} gange`; };
+  if (keys.length === 1) return part(keys[0]);
+  // Even distribution always lands on just two group sizes — list each with its repeat count.
+  return keys.map(part).join(', derefter ');
+}
 
 /* 1) distribute increases / decreases evenly */
 function evenCalc() {
@@ -61,13 +70,13 @@ function evenCalc() {
     if (T > S) {
       const sizes = groups(Math.round(S), n);
       out.innerHTML = `<b>Tag ${n} masker ud</b> (slut: ${Math.round(S) + n} m):<br>Strik i grupper og <b>tag 1 ud</b> efter hver gruppe:<br>
-        <span class="seq">${sizes.map((s) => `(strik ${s}, tag 1 ud)`).join(', ')}</span><br><small>Grupper: ${summarize(sizes)}.</small>`;
+        <span class="seq">${compactSeq(sizes, (s) => `(strik ${s}, tag 1 ud)`)}</span><br><small>I alt ${n} udtagninger, jævnt fordelt.</small>`;
     } else {
       const plain = Math.round(S) - 2 * n;
       if (plain < 0) { out.innerHTML = `Du kan ikke tage ${n} ind på kun ${Math.round(S)} masker.`; return; }
       const sizes = groups(plain, n);
       out.innerHTML = `<b>Tag ${n} masker ind</b> (slut: ${Math.round(S) - n} m):<br>Strik i grupper og <b>strik 2 sammen</b> efter hver gruppe:<br>
-        <span class="seq">${sizes.map((s) => `(strik ${s}, strik 2 sm)`).join(', ')}</span><br><small>Grupper før hver indtagning: ${summarize(sizes)}.</small>`;
+        <span class="seq">${compactSeq(sizes, (s) => `(strik ${s}, strik 2 sm)`)}</span><br><small>I alt ${n} indtagninger, jævnt fordelt.</small>`;
     }
   });
   return c;
@@ -103,26 +112,39 @@ function gaugeCalc() {
   return c;
 }
 
-/* 3) yarn needed */
+/* 3) yarn needed — calculate by length (metres) OR by weight (grams) */
 function yarnCalc() {
   const c = card('Garnberegner',
-    'Skifter du garn? Se hvor mange nøgler du skal bruge.',
+    'Skifter du garn? Se hvor mange nøgler du skal bruge — regn efter meter eller efter vægt.',
     `<p><b>Hvad er den til?</b> Vil du strikke en opskrift i et <b>andet garn</b> end det, der står? Den regner ud hvor mange nøgler du skal købe, så du har garn nok.</p>
+     <p><b>Meter eller vægt?</b> Tryk øverst for at vælge. Det sikreste er at regne <b>efter meter</b> (det er den samlede længde garn, der afgør om du har nok). Men kender du kun vægten, kan du regne <b>efter vægt</b> i stedet.</p>
      <p><b>Sådan bruger du den:</b></p>
-     <ol><li>Se i opskriften hvor meget af det <b>originale</b> garn der skal bruges: antal nøgler og hvor mange meter der er på én nøgle (står på banderolen).</li>
-     <li>Find ud af hvor mange meter der er på én nøgle af <b>dit</b> garn (står på din banderole).</li></ol>
-     <p>Så ganger den sammen og fortæller dig antal nøgler.</p>
+     <ol><li>Se i opskriften hvor meget af det <b>originale</b> garn der skal bruges: antal nøgler og hvor mange meter (eller gram) der er på én nøgle — står på banderolen.</li>
+     <li>Find ud af hvor mange meter (eller gram) der er på én nøgle af <b>dit</b> garn.</li></ol>
+     <p>Så ganger den sammen og fortæller dig antal nøgler + den samlede mængde.</p>
      <p class="ex"><b>Eksempel:</b> Opskrift = 8 nøgler à 50 m (= 400 m). Dit garn har 100 m pr. nøgle → du skal bruge <b>4 nøgler</b>.</p>`);
+  let unit = 'm';
+  const unitWord = () => unit === 'm' ? 'meter' : 'gram';
+  const toggle = E('div', 'unittoggle');
+  toggle.innerHTML = `<button type="button" class="ut-btn on" data-u="m">Efter meter</button><button type="button" class="ut-btn" data-u="g">Efter vægt</button>`;
+  c.append(toggle);
   c.append(E('p', 'mini', 'Opskriften kræver (originalt garn)'));
-  const g = E('div', 'grid2'); g.innerHTML = '<label class="nl">antal nøgler<input id="y-balls" type="number" inputmode="numeric" min="1" placeholder="fx 8"></label><label class="nl">meter pr. nøgle<input id="y-len" type="number" inputmode="numeric" min="1" placeholder="fx 50"></label>'; c.append(g);
+  const g = E('div', 'grid2'); g.innerHTML = '<label class="nl">antal nøgler<input id="y-balls" type="number" inputmode="numeric" min="1" placeholder="fx 8"></label><label class="nl"><span class="y-unit">meter</span> pr. nøgle<input id="y-len" type="number" inputmode="numeric" min="1" placeholder="fx 50"></label>'; c.append(g);
   c.append(E('p', 'mini', 'Dit garn'));
-  c.append(E('label', 'nl', 'meter pr. nøgle')); c.lastChild.innerHTML += '<input id="y-mine" type="number" inputmode="numeric" min="1" placeholder="fx 100">';
+  const ml = E('label', 'nl', '<span class="y-unit">meter</span> pr. nøgle<input id="y-mine" type="number" inputmode="numeric" min="1" placeholder="fx 100">'); c.append(ml);
   const out = E('div', 'result'); out.id = 'y-out'; c.append(out);
-  c.addEventListener('input', () => {
+  const recompute = () => {
     const b = v(c, 'y-balls'), l = v(c, 'y-len'), mine = v(c, 'y-mine');
     if (!ok(b) || !ok(l) || !ok(mine)) { out.innerHTML = ''; return; }
-    out.innerHTML = `Du skal bruge ca. <b>${Math.ceil(b * l / mine)} nøgler</b> af dit garn (i alt ${Math.round(b * l)} m).<br><small>Køb gerne 1 ekstra for en sikkerheds skyld.</small>`;
+    out.innerHTML = `Du skal bruge ca. <b>${Math.ceil(b * l / mine)} nøgler</b> af dit garn (i alt ${Math.round(b * l)} ${unitWord()}).<br><small>Køb gerne 1 ekstra for en sikkerheds skyld.</small>`;
+  };
+  toggle.querySelectorAll('.ut-btn').forEach((btn) => btn.onclick = () => {
+    unit = btn.dataset.u;
+    toggle.querySelectorAll('.ut-btn').forEach((b) => b.classList.toggle('on', b === btn));
+    c.querySelectorAll('.y-unit').forEach((s) => s.textContent = unitWord());
+    recompute();
   });
+  c.addEventListener('input', recompute);
   return c;
 }
 

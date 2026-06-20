@@ -436,3 +436,54 @@ h1, h2, h3, .brand { font-family: var(--font-head); letter-spacing: .2px; }
 .finishtick { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 50%; background: var(--sage); color: #fff; flex: 0 0 auto; }
 .finprev { margin: 4px 0 6px; }
 .finprev img { width: 100%; max-height: 240px; object-fit: cover; border-radius: 12px; border: 1px solid var(--line); }
+
+/* ---- multiple yarns / needles + run-length helpers ---- */
+.formsec-min { font-size: 13px; color: var(--ink-soft); font-weight: 600; margin: 12px 0 6px; }
+.fm-hint { font-weight: 400; color: var(--muted); font-size: 12px; }
+.repeat-list { display: flex; flex-direction: column; gap: 8px; }
+.reprow { display: flex; gap: 8px; align-items: stretch; }
+.reprow .ry, .reprow .rn { flex: 1; min-width: 0; margin-top: 0; }
+.reprow .reprm { flex: 0 0 auto; width: 42px; border: 1px solid var(--line); background: var(--cream);
+  border-radius: 10px; color: var(--muted); font-size: 22px; line-height: 1; cursor: pointer; }
+.reprow .reprm:active { background: var(--wool-soft); color: var(--wool-dk); }
+.addrow { margin: 8px 0 2px; background: none; border: 1px dashed var(--line); color: var(--wool-dk);
+  border-radius: 10px; padding: 9px 12px; font-size: 14px; font-weight: 600; cursor: pointer; width: 100%; }
+.addrow:active { background: var(--wool-soft); }
+
+/* ---- tappable date field (opens the Monday-first calendar) ---- */
+.datebtn { display: block; width: 100%; margin-top: 4px; text-align: left; background: var(--cream);
+  border: 1px solid var(--line); border-radius: 10px; padding: 12px; font-size: 16px; color: var(--ink); cursor: pointer; }
+.datebtn.empty { color: var(--faint); }
+
+/* reset the round counter, set apart from + / − */
+.mc-resetbtn { display: block; margin: 10px auto 2px; background: none; border: none; color: var(--muted);
+  font-size: 13px; font-weight: 600; padding: 6px 10px; cursor: pointer; }
+.mc-resetbtn:active { color: var(--wool-dk); }
+
+/* ---- Monday-first calendar popover ---- */
+.dp-ov { position: fixed; inset: 0; background: rgba(47,39,35,.45); display: flex; align-items: center;
+  justify-content: center; z-index: 1000; padding: 16px; }
+.dp-cal { background: var(--paper); border-radius: 18px; padding: 14px; width: 100%; max-width: 340px; box-shadow: var(--sh-3); }
+.dp-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.dp-title { font-family: var(--font-head); font-size: 17px; color: var(--ink); }
+.dp-nav { width: 40px; height: 40px; border-radius: 10px; border: 1px solid var(--line);
+  background: var(--cream); color: var(--wool-dk); font-size: 22px; line-height: 1; cursor: pointer; }
+.dp-nav:active { background: var(--wool-soft); }
+.dp-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
+.dp-cell { aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
+  font-size: 15px; border-radius: 9px; border: none; background: none; color: var(--ink); }
+.dp-cell.dow { aspect-ratio: auto; font-size: 11px; color: var(--muted); font-weight: 600; padding: 2px 0 4px; }
+.dp-cell.day { cursor: pointer; }
+.dp-cell.day:active { background: var(--wool-soft); }
+.dp-cell.today { box-shadow: inset 0 0 0 1.5px var(--gold); font-weight: 700; }
+.dp-cell.sel { background: var(--wool); color: #fff; font-weight: 700; }
+.dp-foot { display: flex; gap: 8px; margin-top: 12px; }
+.dp-foot-btn { flex: 1; background: var(--cream); border: 1px solid var(--line); border-radius: 10px;
+  padding: 10px; font-size: 14px; font-weight: 600; color: var(--ink-soft); cursor: pointer; }
+.dp-foot-btn:active { background: var(--wool-soft); color: var(--wool-dk); }
+
+/* ---- meter / weight toggle in the yarn calculator ---- */
+.unittoggle { display: flex; gap: 6px; background: var(--sunken); border-radius: 12px; padding: 4px; margin: 6px 0 12px; }
+.ut-btn { flex: 1; border: none; background: none; border-radius: 9px; padding: 9px; font-size: 14px;
+  font-weight: 600; color: var(--muted); cursor: pointer; }
+.ut-btn.on { background: var(--paper); color: var(--wool-dk); box-shadow: var(--sh-1); }

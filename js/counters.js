@@ -4,6 +4,7 @@ import { store, uid } from './store.js';
 import { openReader } from './reader.js';
 import { allUploads, getUpload, putPhoto, getPhoto } from './idb.js';
 import { CAT_ICONS, ICON_GROUPS, DEFAULT_ICON } from './caticons.js';
+import { dateBtnHtml, wireDateButtons } from './datepicker.js';
 
 let E, M, node;
 let projects = [], activeId = null;
@@ -22,10 +23,16 @@ function matchPeriod(p) {
 const finishedInPeriod = () => projects.filter((p) => p.done && matchPeriod(p));
 const projMeters = (p) => {
   if (!p.gramsUsed) return 0;
-  if (p.mPer50g) return Math.round(p.gramsUsed * p.mPer50g / 50);
+  if (p.runM && p.runG) return Math.round(p.gramsUsed * p.runM / p.runG);
+  if (p.mPer50g) return Math.round(p.gramsUsed * p.mPer50g / 50); // legacy
   if (p.mPer100g) return Math.round(p.gramsUsed * p.mPer100g / 100); // legacy
   return 0;
 };
+// A project can use several yarns and several needle sizes. These read the
+// list form, falling back to the old single-value fields for older projects.
+const yarnsOf = (p) => (p.yarns && p.yarns.length) ? p.yarns : (p.yarn ? [p.yarn] : []);
+const needlesOf = (p) => (p.needles && p.needles.length) ? p.needles : (p.needle ? [p.needle] : []);
+const projTags = (p) => [...yarnsOf(p), ...needlesOf(p)];
 const needleFmt = (mm) => (mm % 1 === 0 ? String(mm) : mm.toFixed(1).replace('.', ',')) + ' mm';
 const fmtDate = (s) => { if (!s) return ''; const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s); return m ? `${m[3]}.${m[2]}.${m[1]}` : s; };
 const todayStr = () => { const d = new Date(); const p = (n) => String(n).padStart(2, '0'); return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`; };
@@ -65,7 +72,7 @@ function projCard(p) {
   const main = p.counters[0];
   const photo = p.photoId ? `<span class="pc-photo" data-ph="${esc(p.photoId)}"></span>` : '';
   const row = E('button', 'projcard' + (p.done ? ' done' : '') + (p.photoId ? ' hasphoto' : ''), `${photo}<div class="pc-main"><b>${esc(p.name)}${p.done ? ' <span class="donetick">✓</span>' : ''}</b>
-    <span class="pc-sub">${[p.yarn, p.needle].filter(Boolean).map(esc).join(' · ') || (p.done ? 'færdigt' : 'tryk for at fortsætte')}</span></div>
+    <span class="pc-sub">${projTags(p).map(esc).join(' · ') || (p.done ? 'færdigt' : 'tryk for at fortsætte')}</span></div>
     <div class="pc-count"><span class="pc-num">${main ? main.value : 0}</span><span class="pc-lbl">omg.</span></div>`);
   row.onclick = () => { activeId = p.id; save(); if (!p.done) requestWake(); renderDetail(); };
   return row;
@@ -154,7 +161,7 @@ function renderDetail() {
   const head = E('div', 'detailhead');
   const back = E('button', 'iconbtn back', '‹ Projekter'); back.onclick = () => { activeId = null; save(); releaseWake(); renderList(); };
   const edit = E('button', 'iconbtn', '✎'); edit.onclick = () => projectModal(p);
-  head.append(back, E('div', 'dtitle', `<b>${esc(p.name)}</b><small>${[p.yarn, p.needle].filter(Boolean).map(esc).join(' · ')}</small>`), edit);
+  head.append(back, E('div', 'dtitle', `<b>${esc(p.name)}</b><small>${projTags(p).map(esc).join(' · ')}</small>`), edit);
   node.append(head);
 
   // main counter — big
@@ -164,7 +171,10 @@ function renderDetail() {
   const minus = E('button', 'mc-btn minus', '−'); minus.onclick = () => tap(p, main, -1);
   const plus = E('button', 'mc-btn plus', '+'); plus.onclick = () => tap(p, main, 1);
   const ctrls = E('div', 'mc-ctrls'); ctrls.append(minus, plus);
-  node.append(mc, ctrls);
+  // reset just the round counter (not the whole project)
+  const mcReset = E('button', 'mc-resetbtn', '↺ Nulstil omgangstæller');
+  mcReset.onclick = () => { if (confirm('Nulstil omgangstælleren til ' + (main.wrapAt ? 1 : 0) + '?')) { main.value = main.wrapAt ? 1 : 0; main.repeats = 0; save(); renderDetail(); } };
+  node.append(mc, ctrls, mcReset);
 
   // open the linked recipe (resumes where she left off) or link one
   const patBtn = E('button', 'ghost wide openpat', p.patternId ? '📖 Åbn opskrift' : '+ Tilknyt opskrift');
@@ -223,30 +233,59 @@ function renderDetail() {
 function projectModal(existing) {
   const f = E('div', 'form');
   // remember previously used yarns (from projects + stash)
-  const knownYarns = [...new Set([...projects.map((p) => p.yarn), ...store.get('stash', []).map((s) => s.name)].filter(Boolean))];
+  const knownYarns = [...new Set([...projects.flatMap(yarnsOf), ...store.get('stash', []).map((s) => s.name)].filter(Boolean))];
   const yarnOpts = knownYarns.map((y) => `<option value="${esc(y)}">`).join('');
-  // needle sizes 2–12 mm in ½-mm steps (+ keep an existing custom value)
+  // needle sizes 2–12 mm in ½-mm steps (+ keep any existing custom values)
   const sizes = []; for (let mm = 2; mm <= 12.0001; mm += 0.5) sizes.push(needleFmt(mm));
-  const cur = existing && existing.needle ? existing.needle : '';
-  if (cur && !sizes.includes(cur)) sizes.unshift(cur);
-  const needleOpts = `<option value="">— vælg —</option>` + sizes.map((s) => `<option${s === cur ? ' selected' : ''}>${esc(s)}</option>`).join('');
+  const exYarns = existing ? yarnsOf(existing) : [];
+  const exNeedles = existing ? needlesOf(existing) : [];
+  exNeedles.forEach((nd) => { if (nd && !sizes.includes(nd)) sizes.unshift(nd); });
+  const needleOptsHtml = (sel) => `<option value="">— vælg —</option>` + sizes.map((s) => `<option${s === sel ? ' selected' : ''}>${esc(s)}</option>`).join('');
+  // run length (from the yarn band): metres per N grams (N defaults to 50, editable)
+  const exRunM = existing ? (existing.runM != null ? existing.runM : (existing.mPer50g != null ? existing.mPer50g : '')) : '';
+  const exRunG = existing && existing.runG != null ? existing.runG : 50;
   // category (shared with Opskrifter); allows creating a new one inline
   const cats = store.get('collections', []);
   const catOpts = `<option value="">— ingen —</option>` + cats.map((c) => `<option value="${c.id}"${existing && existing.categoryId === c.id ? ' selected' : ''}>${esc(c.name)}</option>`).join('') + `<option value="__new">+ Ny kategori…</option>`;
   f.innerHTML = `<h2>${existing ? 'Rediger projekt' : 'Nyt projekt'}</h2>
     <label>Navn<input id="f-name" type="text" maxlength="40" placeholder="fx Sommerbluse" value="${existing ? esc(existing.name) : ''}"></label>
-    <label>Garn<input id="f-yarn" type="text" list="f-yarnlist" maxlength="40" placeholder="fx Drops Air" value="${existing ? esc(existing.yarn || '') : ''}"><datalist id="f-yarnlist">${yarnOpts}</datalist></label>
-    <label>Pinde<select id="f-needle">${needleOpts}</select></label>
+    <div class="formsec-min">Garn <span class="fm-hint">(du kan tilføje flere)</span></div>
+    <div id="f-yarns" class="repeat-list"></div>
+    <datalist id="f-yarnlist">${yarnOpts}</datalist>
+    <button type="button" class="addrow" id="f-addyarn">+ Tilføj garn</button>
+    <div class="formsec-min">Pinde <span class="fm-hint">(du kan tilføje flere)</span></div>
+    <div id="f-needles" class="repeat-list"></div>
+    <button type="button" class="addrow" id="f-addneedle">+ Tilføj pind</button>
     <label>Kategori<select id="f-cat">${catOpts}</select></label>
     <div class="formsec">Projektdetaljer (valgfrit)</div>
     <div class="grid2"><label class="nl">Størrelse<input id="f-size" type="text" maxlength="30" placeholder="fx M / 98-104" value="${existing ? esc(existing.size || '') : ''}"></label><label class="nl">Modtager<input id="f-recipient" type="text" maxlength="30" placeholder="fx Til mor" value="${existing ? esc(existing.recipient || '') : ''}"></label></div>
     <label>Strikkefasthed<input id="f-gauge" type="text" maxlength="40" placeholder="fx 22 m × 30 p = 10×10 cm" value="${existing ? esc(existing.gauge || '') : ''}"></label>
-    <div class="grid2"><label class="nl">Startdato<input id="f-start" type="date" value="${existing ? esc(existing.startDate || '') : ''}"></label><label class="nl">Slutdato<input id="f-end" type="date" value="${existing ? esc(existing.endDate || '') : ''}"></label></div>
+    <div class="grid2"><label class="nl">Startdato${dateBtnHtml('f-start', existing ? existing.startDate : '')}</label><label class="nl">Slutdato${dateBtnHtml('f-end', existing ? existing.endDate : '')}</label></div>
     <label>Noter<textarea id="f-notes" rows="2" maxlength="200" placeholder="evt. noter">${existing ? esc(existing.notes || '') : ''}</textarea></label>
     <div class="formsec">Garnforbrug (til din statusoversigt — valgfrit)</div>
-    <div class="grid2"><label class="nl">Garn brugt (g)<input id="f-grams" type="number" inputmode="numeric" min="0" placeholder="fx 350" value="${existing && existing.gramsUsed != null ? existing.gramsUsed : ''}"></label><label class="nl">Løbelængde (m / 50 g)<input id="f-runlen" type="number" inputmode="numeric" min="0" placeholder="fx 150" value="${existing && existing.mPer50g != null ? existing.mPer50g : ''}"></label></div>
+    <div class="grid2"><label class="nl">Garn brugt (g)<input id="f-grams" type="number" inputmode="numeric" min="0" placeholder="fx 350" value="${existing && existing.gramsUsed != null ? existing.gramsUsed : ''}"></label><label class="nl">Løbelængde (m)<input id="f-runm" type="number" inputmode="numeric" min="0" placeholder="fx 150" value="${exRunM}"></label></div>
+    <label class="nl">… pr. antal gram <span class="fm-hint">(står på banderolen — typisk 50)</span><input id="f-rung" type="number" inputmode="numeric" min="1" placeholder="50" value="${exRunG}"></label>
     <div class="form-actions"><button class="ghost cancel">Annuller</button><button class="primary ok">Gem</button></div>`;
   const m = M(f);
+  // repeatable yarn + needle rows (a project can use more than one of each)
+  const yarnsBox = f.querySelector('#f-yarns'), needlesBox = f.querySelector('#f-needles');
+  const addYarnRow = (val = '') => {
+    const row = E('div', 'reprow');
+    row.innerHTML = `<input type="text" class="ry" list="f-yarnlist" maxlength="40" placeholder="fx Drops Air" value="${esc(val)}"><button type="button" class="reprm" aria-label="Fjern garn">×</button>`;
+    row.querySelector('.reprm').onclick = () => row.remove();
+    yarnsBox.append(row);
+  };
+  const addNeedleRow = (val = '') => {
+    const row = E('div', 'reprow');
+    row.innerHTML = `<select class="rn">${needleOptsHtml(val)}</select><button type="button" class="reprm" aria-label="Fjern pind">×</button>`;
+    row.querySelector('.reprm').onclick = () => row.remove();
+    needlesBox.append(row);
+  };
+  (exYarns.length ? exYarns : ['']).forEach(addYarnRow);
+  (exNeedles.length ? exNeedles : ['']).forEach(addNeedleRow);
+  f.querySelector('#f-addyarn').onclick = () => addYarnRow('');
+  f.querySelector('#f-addneedle').onclick = () => addNeedleRow('');
+  wireDateButtons(f);
   const catSel = f.querySelector('#f-cat');
   catSel.onchange = () => {
     if (catSel.value !== '__new') return;
@@ -256,16 +295,20 @@ function projectModal(existing) {
   f.querySelector('.cancel').onclick = () => m.close();
   f.querySelector('.ok').onclick = () => {
     const name = f.querySelector('#f-name').value.trim() || 'Nyt projekt';
-    const yarn = f.querySelector('#f-yarn').value.trim(), needle = f.querySelector('#f-needle').value.trim(), notes = f.querySelector('#f-notes').value.trim();
+    const yarns = [...yarnsBox.querySelectorAll('.ry')].map((i) => i.value.trim()).filter(Boolean);
+    const needles = [...needlesBox.querySelectorAll('.rn')].map((s) => s.value.trim()).filter(Boolean);
+    const notes = f.querySelector('#f-notes').value.trim();
     const categoryId = catSel.value && catSel.value !== '__new' ? catSel.value : null;
     const size = f.querySelector('#f-size').value.trim(), gauge = f.querySelector('#f-gauge').value.trim(), recipient = f.querySelector('#f-recipient').value.trim();
-    const startDate = f.querySelector('#f-start').value, endDate = f.querySelector('#f-end').value;
-    const gv = parseFloat(f.querySelector('#f-grams').value); const rv = parseFloat(f.querySelector('#f-runlen').value);
-    const gramsUsed = Number.isFinite(gv) ? gv : null, mPer50g = Number.isFinite(rv) ? rv : null;
+    const startDate = f.querySelector('#f-start').dataset.val || '', endDate = f.querySelector('#f-end').dataset.val || '';
+    const gv = parseFloat(f.querySelector('#f-grams').value);
+    const rm = parseFloat(f.querySelector('#f-runm').value), rg = parseFloat(f.querySelector('#f-rung').value);
+    const gramsUsed = Number.isFinite(gv) ? gv : null;
+    const runM = Number.isFinite(rm) && rm > 0 ? rm : null, runG = Number.isFinite(rg) && rg > 0 ? rg : 50;
     // a manual end date drives the completion date used in the status overview
     const finishedAt = endDate ? new Date(endDate + 'T12:00').getTime() : (existing ? existing.finishedAt : undefined);
-    const fields = { name, yarn, needle, notes, categoryId, size, gauge, recipient, startDate, endDate, gramsUsed, mPer50g };
-    if (existing) { Object.assign(existing, fields); if (endDate) existing.finishedAt = finishedAt; delete existing.mPer100g; }
+    const fields = { name, yarns, needles, notes, categoryId, size, gauge, recipient, startDate, endDate, gramsUsed, runM, runG };
+    if (existing) { Object.assign(existing, fields); if (endDate) existing.finishedAt = finishedAt; delete existing.yarn; delete existing.needle; delete existing.mPer50g; delete existing.mPer100g; }
     else { const p = { id: uid(), ...fields, finishedAt, counters: [{ id: uid(), label: 'Omgange', value: 0, wrapAt: 0, repeats: 0, main: true }] }; projects.push(p); activeId = p.id; }
     save(); m.close(); render();
   };
@@ -311,16 +354,18 @@ function downscaleImage(file, max = 1280, q = 0.82) {
 /* celebrate finishing a project: add a photo + confirm yarn used, then mark done */
 function finishModal(p) {
   const f = E('div', 'form finishform');
-  const yarnHint = p.yarn ? ` af ${esc(p.yarn)}` : '';
+  const yarnHint = yarnsOf(p).length ? ` af ${esc(yarnsOf(p).join(', '))}` : '';
   f.innerHTML = `<h2 class="finishhead"><span class="finishtick"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span> Tillykke — det er færdigt!</h2>
     <p class="hint">Gem et minde om “${esc(p.name)}” — det vises i din statusoversigt.</p>
     <label class="photopick">Billede af det færdige strik (valgfrit)<input id="fin-photo" type="file" accept="image/*"></label>
     <div id="fin-prev" class="finprev" hidden></div>
-    <label>Afsluttet dato<input id="fin-date" type="date" value="${p.endDate || todayStr()}"></label>
+    <label>Afsluttet dato${dateBtnHtml('fin-date', p.endDate || todayStr())}</label>
     <div class="formsec">Garnforbrug${yarnHint} (valgfrit)</div>
-    <div class="grid2"><label class="nl">Garn brugt (g)<input id="fin-grams" type="number" inputmode="numeric" min="0" placeholder="fx 350" value="${p.gramsUsed != null ? p.gramsUsed : ''}"></label><label class="nl">Løbelængde (m / 50 g)<input id="fin-runlen" type="number" inputmode="numeric" min="0" placeholder="fx 150" value="${p.mPer50g != null ? p.mPer50g : ''}"></label></div>
+    <div class="grid2"><label class="nl">Garn brugt (g)<input id="fin-grams" type="number" inputmode="numeric" min="0" placeholder="fx 350" value="${p.gramsUsed != null ? p.gramsUsed : ''}"></label><label class="nl">Løbelængde (m)<input id="fin-runm" type="number" inputmode="numeric" min="0" placeholder="fx 150" value="${p.runM != null ? p.runM : (p.mPer50g != null ? p.mPer50g : '')}"></label></div>
+    <label class="nl">… pr. antal gram <span class="fm-hint">(typisk 50)</span><input id="fin-rung" type="number" inputmode="numeric" min="1" placeholder="50" value="${p.runG != null ? p.runG : 50}"></label>
     <div class="form-actions"><button class="ghost cancel">Annuller</button><button class="primary ok">Gem som færdigt</button></div>`;
   const m = M(f);
+  wireDateButtons(f);
   let photoBlob = null;
   const prev = f.querySelector('#fin-prev');
   f.querySelector('#fin-photo').onchange = async (e) => {
@@ -331,11 +376,12 @@ function finishModal(p) {
   };
   f.querySelector('.cancel').onclick = () => m.close();
   f.querySelector('.ok').onclick = async () => {
-    const gv = parseFloat(f.querySelector('#fin-grams').value), rv = parseFloat(f.querySelector('#fin-runlen').value);
+    const gv = parseFloat(f.querySelector('#fin-grams').value);
+    const rm = parseFloat(f.querySelector('#fin-runm').value), rg = parseFloat(f.querySelector('#fin-rung').value);
     if (Number.isFinite(gv)) p.gramsUsed = gv;
-    if (Number.isFinite(rv)) p.mPer50g = rv;
+    if (Number.isFinite(rm) && rm > 0) { p.runM = rm; p.runG = (Number.isFinite(rg) && rg > 0) ? rg : 50; delete p.mPer50g; delete p.mPer100g; }
     if (photoBlob) { try { const id = 'ph_' + p.id; await putPhoto({ id, blob: photoBlob, mime: photoBlob.type || 'image/jpeg', addedAt: Date.now() }); p.photoId = id; } catch (err) {} }
-    const dstr = f.querySelector('#fin-date').value;
+    const dstr = f.querySelector('#fin-date').dataset.val;
     p.endDate = dstr || todayStr();
     p.done = true; p.finishedAt = new Date(p.endDate + 'T12:00').getTime();
     releaseWake(); activeId = null; save(); m.close(); renderList();
