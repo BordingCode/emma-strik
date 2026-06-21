@@ -19,3 +19,5 @@ self.addEventListener('fetch', (e) => {
     e.respondWith(caches.match(req).then((r) => r || fetch(req)));
   }
 });
+
+// hub-stats tracker v1
