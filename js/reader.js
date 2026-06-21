@@ -179,17 +179,45 @@ export async function openReader(upload, progress) {
   // drawing (ignored while pinching / multi-touch)
   const pos = (e) => { const r = canvas.getBoundingClientRect(); return { x: (e.clientX - r.left) * (canvas.width / r.width), y: (e.clientY - r.top) * (canvas.height / r.height) }; };
   let drawing = false;
+  // Highlighter is drawn on its own full-opacity layer and blended onto the page ONCE
+  // at HI_ALPHA. (Stroking the same path on every pointermove would otherwise stack the
+  // semi-transparent colour into a near-solid blob, making the alpha value meaningless.)
+  const HI_ALPHA = 0.3;
+  let hiLayer = null, hiCtx = null, baseSnap = null;
   canvas.addEventListener('pointerdown', (e) => {
     if (ptrs.size > 1 || (mode !== 'pen' && mode !== 'hi' && mode !== 'eraser')) return;
     drawing = true; try { canvas.setPointerCapture(e.pointerId); } catch (err) {}
+    const p = pos(e);
+    if (mode === 'hi') {
+      // snapshot current page so we can re-blend the live stroke each move without compounding
+      baseSnap = document.createElement('canvas'); baseSnap.width = canvas.width; baseSnap.height = canvas.height;
+      baseSnap.getContext('2d').drawImage(canvas, 0, 0);
+      hiLayer = document.createElement('canvas'); hiLayer.width = canvas.width; hiLayer.height = canvas.height;
+      hiCtx = hiLayer.getContext('2d');
+      hiCtx.strokeStyle = 'rgb(255,214,64)'; hiCtx.lineWidth = 26; hiCtx.lineCap = 'round'; hiCtx.lineJoin = 'round';
+      hiCtx.beginPath(); hiCtx.moveTo(p.x, p.y);
+      return;
+    }
     ctx.globalCompositeOperation = mode === 'eraser' ? 'destination-out' : 'source-over';
-    ctx.strokeStyle = mode === 'hi' ? 'rgba(255,214,64,0.25)' : '#2a2420';
-    ctx.lineWidth = mode === 'hi' ? 26 : mode === 'eraser' ? 30 : 3;
+    ctx.strokeStyle = '#2a2420';
+    ctx.lineWidth = mode === 'eraser' ? 30 : 3;
     ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-    const p = pos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y);
+    ctx.beginPath(); ctx.moveTo(p.x, p.y);
   });
-  canvas.addEventListener('pointermove', (e) => { if (!drawing || ptrs.size > 1) return; const p = pos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); });
-  const endDraw = () => { if (drawing) { drawing = false; saveState(); } };
+  canvas.addEventListener('pointermove', (e) => {
+    if (!drawing || ptrs.size > 1) return;
+    const p = pos(e);
+    if (mode === 'hi' && hiCtx) {
+      hiCtx.lineTo(p.x, p.y); hiCtx.stroke();
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(baseSnap, 0, 0);
+      ctx.globalAlpha = HI_ALPHA; ctx.drawImage(hiLayer, 0, 0); ctx.globalAlpha = 1;
+      return;
+    }
+    ctx.lineTo(p.x, p.y); ctx.stroke();
+  });
+  const endDraw = () => { if (drawing) { drawing = false; hiLayer = hiCtx = baseSnap = null; saveState(); } };
   canvas.addEventListener('pointerup', endDraw); canvas.addEventListener('pointercancel', endDraw);
 
   // persist annotation + count + reading position (debounced) so you resume where you left off

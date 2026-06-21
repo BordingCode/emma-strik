@@ -1,5 +1,5 @@
 // Offline cache. Bump CACHE on every deploy so browsers fetch fresh files.
-const CACHE = 'emma-strik-v37';
+const CACHE = 'emma-strik-v38';
 const ASSETS = [
   './', './index.html', './manifest.json', './icon.svg', './css/style.css', './vendor/pdf.mjs', './vendor/pdf.worker.mjs',
   './assets/icon-180.png', './assets/icon-192.png', './assets/icon-512.png', './assets/icon-maskable-512.png',
