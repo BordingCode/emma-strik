@@ -121,6 +121,36 @@ export async function openReader(upload, progress) {
   const closeMenu = () => { menu.hidden = true; moreBtn.classList.remove('open'); };
   moreBtn.onclick = (e) => { e.stopPropagation(); menu.hidden = !menu.hidden; moreBtn.classList.toggle('open', !menu.hidden); };
 
+  // ---- pen/highlighter look (colour + thickness + transparency), remembered across patterns ----
+  const PALETTES = {
+    pen: ['#2a2420', '#d23b3b', '#2f6fd2', '#2e9e57', '#d24b9c', '#ffffff'],   // mørk, rød, blå, grøn, pink, hvid
+    hi:  ['#ffd640', '#ff9d4d', '#7ed957', '#5bc8ff', '#ff7eb6', '#c79bff'],   // gul, orange, grøn, blå, pink, lilla
+  };
+  const WIDTHS = { pen: [2, 4, 7], hi: [16, 26, 40] };
+  function defaultTools() { return { pen: { color: '#2a2420', width: 4, alpha: 1 }, hi: { color: '#ffd640', width: 26, alpha: 0.3 } }; }
+  function loadTools() { try { const s = JSON.parse(localStorage.getItem('emma-reader-tools')); if (s && s.pen && s.hi) return { pen: { ...defaultTools().pen, ...s.pen }, hi: { ...defaultTools().hi, ...s.hi } }; } catch (e) {} return defaultTools(); }
+  const tools = loadTools();
+  const saveTools = () => { try { localStorage.setItem('emma-reader-tools', JSON.stringify(tools)); } catch (e) {} };
+
+  const settings = E('div', 'rtool-settings'); settings.hidden = true;
+  ov.querySelector('.reader-top').append(settings);
+  const closeSettings = () => { settings.hidden = true; };
+  function openSettings(key) {
+    const t = tools[key];
+    const sw = PALETTES[key].map((c) => `<button class="ts-sw${c === t.color ? ' on' : ''}" data-c="${c}" style="background:${c}" aria-label="Farve"></button>`).join('');
+    const sz = WIDTHS[key].map((w, i) => `<button class="ts-sz${w === t.width ? ' on' : ''}" data-w="${w}" aria-label="Tykkelse"><span style="width:${5 + i * 6}px;height:${5 + i * 6}px"></span></button>`).join('');
+    settings.innerHTML =
+      `<div class="ts-row ts-colors">${sw}</div>` +
+      `<div class="ts-row"><div class="ts-sizes">${sz}</div></div>` +
+      `<label class="ts-row ts-alpha"><span>Synlighed</span><input type="range" min="15" max="100" step="5" value="${Math.round(t.alpha * 100)}"><b>${Math.round(t.alpha * 100)}%</b></label>`;
+    settings.hidden = false;
+    settings.querySelectorAll('.ts-sw').forEach((b) => b.onclick = () => { t.color = b.dataset.c; settings.querySelectorAll('.ts-sw').forEach((x) => x.classList.toggle('on', x === b)); saveTools(); });
+    settings.querySelectorAll('.ts-sz').forEach((b) => b.onclick = () => { t.width = +b.dataset.w; settings.querySelectorAll('.ts-sz').forEach((x) => x.classList.toggle('on', x === b)); saveTools(); });
+    const rng = settings.querySelector('input'), lab = settings.querySelector('.ts-alpha b');
+    rng.oninput = () => { t.alpha = +rng.value / 100; lab.textContent = rng.value + '%'; };
+    rng.onchange = saveTools;
+  }
+
   function setMode(m) {
     mode = (mode === m && m !== 'pan') ? 'pan' : m;
     ov.querySelectorAll('.tool').forEach((b) => b.classList.toggle('on', b.dataset.m === mode));
@@ -128,6 +158,7 @@ export async function openReader(upload, progress) {
     const drawing = mode === 'pen' || mode === 'hi' || mode === 'eraser';
     canvas.style.pointerEvents = drawing ? 'auto' : 'none';
     canvas.style.touchAction = drawing ? 'none' : 'auto';
+    if (mode === 'pen' || mode === 'hi') openSettings(mode); else closeSettings();  // colour/size panel for the two drawing tools
   }
   ov.querySelectorAll('.tool').forEach((b) => b.onclick = () => { setMode(b.dataset.m); closeMenu(); });
   const rt = ov.querySelector('.rulertoggle');
@@ -179,45 +210,43 @@ export async function openReader(upload, progress) {
   // drawing (ignored while pinching / multi-touch)
   const pos = (e) => { const r = canvas.getBoundingClientRect(); return { x: (e.clientX - r.left) * (canvas.width / r.width), y: (e.clientY - r.top) * (canvas.height / r.height) }; };
   let drawing = false;
-  // Highlighter is drawn on its own full-opacity layer and blended onto the page ONCE
-  // at HI_ALPHA. (Stroking the same path on every pointermove would otherwise stack the
-  // semi-transparent colour into a near-solid blob, making the alpha value meaningless.)
-  const HI_ALPHA = 0.3;
-  let hiLayer = null, hiCtx = null, baseSnap = null;
+  // Pen & highlighter both draw onto their own FULL-opacity layer, blended onto the page once
+  // at the tool's chosen alpha. (Stroking the same path on every pointermove would otherwise
+  // stack a semi-transparent colour into a near-solid blob, making transparency meaningless.)
+  // The eraser writes straight to the page with destination-out.
+  let layer = null, lctx = null, baseSnap = null, drawAlpha = 1;
   canvas.addEventListener('pointerdown', (e) => {
     if (ptrs.size > 1 || (mode !== 'pen' && mode !== 'hi' && mode !== 'eraser')) return;
     drawing = true; try { canvas.setPointerCapture(e.pointerId); } catch (err) {}
     const p = pos(e);
-    if (mode === 'hi') {
-      // snapshot current page so we can re-blend the live stroke each move without compounding
-      baseSnap = document.createElement('canvas'); baseSnap.width = canvas.width; baseSnap.height = canvas.height;
-      baseSnap.getContext('2d').drawImage(canvas, 0, 0);
-      hiLayer = document.createElement('canvas'); hiLayer.width = canvas.width; hiLayer.height = canvas.height;
-      hiCtx = hiLayer.getContext('2d');
-      hiCtx.strokeStyle = 'rgb(255,214,64)'; hiCtx.lineWidth = 26; hiCtx.lineCap = 'round'; hiCtx.lineJoin = 'round';
-      hiCtx.beginPath(); hiCtx.moveTo(p.x, p.y);
+    if (mode === 'eraser') {
+      layer = lctx = baseSnap = null;
+      ctx.globalCompositeOperation = 'destination-out';
+      ctx.lineWidth = 30; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+      ctx.beginPath(); ctx.moveTo(p.x, p.y);
       return;
     }
-    ctx.globalCompositeOperation = mode === 'eraser' ? 'destination-out' : 'source-over';
-    ctx.strokeStyle = '#2a2420';
-    ctx.lineWidth = mode === 'eraser' ? 30 : 3;
-    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-    ctx.beginPath(); ctx.moveTo(p.x, p.y);
+    const t = tools[mode]; drawAlpha = t.alpha;
+    // snapshot current page so we can re-blend the live stroke each move without compounding
+    baseSnap = document.createElement('canvas'); baseSnap.width = canvas.width; baseSnap.height = canvas.height;
+    baseSnap.getContext('2d').drawImage(canvas, 0, 0);
+    layer = document.createElement('canvas'); layer.width = canvas.width; layer.height = canvas.height;
+    lctx = layer.getContext('2d');
+    lctx.strokeStyle = t.color; lctx.lineWidth = t.width; lctx.lineCap = 'round'; lctx.lineJoin = 'round';
+    lctx.beginPath(); lctx.moveTo(p.x, p.y);
   });
   canvas.addEventListener('pointermove', (e) => {
     if (!drawing || ptrs.size > 1) return;
     const p = pos(e);
-    if (mode === 'hi' && hiCtx) {
-      hiCtx.lineTo(p.x, p.y); hiCtx.stroke();
-      ctx.globalCompositeOperation = 'source-over';
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.drawImage(baseSnap, 0, 0);
-      ctx.globalAlpha = HI_ALPHA; ctx.drawImage(hiLayer, 0, 0); ctx.globalAlpha = 1;
-      return;
-    }
-    ctx.lineTo(p.x, p.y); ctx.stroke();
+    if (mode === 'eraser') { ctx.lineTo(p.x, p.y); ctx.stroke(); return; }
+    if (!lctx) return;
+    lctx.lineTo(p.x, p.y); lctx.stroke();
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(baseSnap, 0, 0);
+    ctx.globalAlpha = drawAlpha; ctx.drawImage(layer, 0, 0); ctx.globalAlpha = 1;
   });
-  const endDraw = () => { if (drawing) { drawing = false; hiLayer = hiCtx = baseSnap = null; saveState(); } };
+  const endDraw = () => { if (drawing) { drawing = false; layer = lctx = baseSnap = null; saveState(); } };
   canvas.addEventListener('pointerup', endDraw); canvas.addEventListener('pointercancel', endDraw);
 
   // persist annotation + count + reading position (debounced) so you resume where you left off
