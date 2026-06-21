@@ -183,7 +183,7 @@ export async function openReader(upload, progress) {
     if (ptrs.size > 1 || (mode !== 'pen' && mode !== 'hi' && mode !== 'eraser')) return;
     drawing = true; try { canvas.setPointerCapture(e.pointerId); } catch (err) {}
     ctx.globalCompositeOperation = mode === 'eraser' ? 'destination-out' : 'source-over';
-    ctx.strokeStyle = mode === 'hi' ? 'rgba(255,214,64,0.45)' : '#2a2420';
+    ctx.strokeStyle = mode === 'hi' ? 'rgba(255,214,64,0.25)' : '#2a2420';
     ctx.lineWidth = mode === 'hi' ? 26 : mode === 'eraser' ? 30 : 3;
     ctx.lineCap = 'round'; ctx.lineJoin = 'round';
     const p = pos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y);
