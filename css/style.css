@@ -560,20 +560,20 @@ h1, h2, h3, .brand { font-family: var(--font-head); letter-spacing: .2px; }
    espresso base, dimensional glow at the top, jewel-warm terracotta + honey accents
    that pop, and soft elevated surfaces (no flat muddy browns). */
 [data-theme="aften"] {
-  --ink: #f4ede1; --ink-soft: #cfc2af; --muted: #9b8d7a; --faint: #736756;
-  --line: #3a2f25; --line-soft: #2c241d;
-  --bg: #15110d; --cream: #221b15; --sunken: #1b1510; --paper: #271f18; --raised: #322820;
-  --bg-glow: #2e2014;
-  --wool: #df8b5d; --wool-dk: #c5734a; --wool-lt: #efa279; --wool-soft: #3a2b20;
-  --sage: #8aa37d; --sage-dk: #6f8a63; --sage-soft: #2b3328;
-  --rose: #d8a492; --gold: #e6bf73; --gold-dk: #c69a4f; --gold-soft: #382e1d;
-  --danger: #e3705e;
-  --page-top: #271a10; --page-bottom: #15110d;
-  --glow-top: rgba(223,139,93,.16); --glow-bottom: rgba(138,163,125,.09);
+  --ink: #f6e8e6; --ink-soft: #d6bcbb; --muted: #a98a8b; --faint: #7a5e60;
+  --line: #3d262a; --line-soft: #2e1d20;
+  --bg: #190f12; --cream: #271619; --sunken: #1f1316; --paper: #2a1a1e; --raised: #341f24;
+  --bg-glow: #311519;
+  --wool: #d77782; --wool-dk: #bd5a67; --wool-lt: #e895a0; --wool-soft: #3a2227;
+  --sage: #899e80; --sage-dk: #6f855f; --sage-soft: #2b322a;
+  --rose: #e0a59a; --gold: #e2ba78; --gold-dk: #c2974f; --gold-soft: #352a1f;
+  --danger: #e36a64;
+  --page-top: #2a1418; --page-bottom: #190f12;
+  --glow-top: rgba(215,119,130,.18); --glow-bottom: rgba(189,90,103,.10);
   --sh-1: 0 1px 2px rgba(0,0,0,.35), 0 1px 3px rgba(0,0,0,.35);
   --sh-2: 0 2px 8px rgba(0,0,0,.40), 0 8px 20px rgba(0,0,0,.45);
   --sh-3: 0 10px 26px rgba(0,0,0,.50), 0 22px 44px rgba(0,0,0,.55);
-  --grad-topbar: linear-gradient(180deg, #4a3526, #2c1e13);
+  --grad-topbar: linear-gradient(180deg, #4d2730, #2c161b);
 }
 /* Solnedgang — dusk twilight, after the Sort Sol murmuration game. Deep indigo sky
    up high, a strong warm setting-sun amber low on the horizon, cream-star ink, dusk-purple bar. */

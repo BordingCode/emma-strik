@@ -5,7 +5,7 @@
 
 // Per-theme look: rgb = dot colour, count = how many, glow = blur multiplier.
 const RECIPES = {
-  aften:      { rgb: '255,196,120', count: 26, glow: 1.0 },  // warm honey fireflies
+  aften:      { rgb: '255,184,176', count: 26, glow: 1.0 },  // soft rose-gold fireflies
   solnedgang: { rgb: '255,210,150', count: 22, glow: 1.0 },  // soft dusk embers (optional)
 };
 

@@ -9,7 +9,7 @@ export const THEMES = [
   { id: 'havbla', name: 'Havblå', themeColor: '#3f7193', dots: ['#cfdde4', '#3f7193', '#4f8079'] },
   { id: 'skovgron', name: 'Skovgrøn', themeColor: '#5f7a4d', dots: ['#d6e0c6', '#5f7a4d', '#8a7d3f'] },
   { id: 'rosenkvarts', name: 'Rosenkvarts', themeColor: '#bd6a73', dots: ['#eed3d2', '#bd6a73', '#6f8a6a'] },
-  { id: 'aften', name: 'Aften', themeColor: '#2c1e13', dots: ['#15110d', '#df8b5d', '#8aa37d'] },
+  { id: 'aften', name: 'Aften', themeColor: '#2c161b', dots: ['#190f12', '#d77782', '#899e80'] },
   { id: 'solnedgang', name: 'Solnedgang', themeColor: '#382c5e', dots: ['#0c1330', '#f5994b', '#7b5a8a'] },
 ];
 
