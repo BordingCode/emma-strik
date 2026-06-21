@@ -126,7 +126,20 @@ applyTheme(store.get('theme', ''), false);
 build();
 requestPersist();
 maybeBackupReminder();
-if ('serviceWorker' in navigator) addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
+// Service worker + seamless updates: when a new version is deployed, reload once it
+// takes control, and actively re-check whenever the app is opened/refocused so an
+// installed PWA never gets stuck on a stale cached build.
+if ('serviceWorker' in navigator) {
+  let refreshing = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (refreshing) return; refreshing = true; location.reload();
+  });
+  addEventListener('load', () => navigator.serviceWorker.register('./sw.js').then((reg) => {
+    reg.update();
+    setInterval(() => reg.update(), 60 * 60 * 1000);            // hourly while open
+    addEventListener('visibilitychange', () => { if (!document.hidden) reg.update(); });
+  }).catch(() => {}));
+}
 window.__es = { show, current };
 
 // Cloud sync: pull on open + when returning to the app. Reload if it brought in newer data.
