@@ -52,6 +52,10 @@ h1, h2, h3, .brand { font-family: var(--font-head); letter-spacing: .2px; }
     linear-gradient(180deg, var(--page-top) 0%, var(--page-bottom) 60%);
   box-shadow: 0 0 60px rgba(60,40,20,.22); }
 
+/* ambient firefly canvas (atmospheric dark themes) — sits behind all app content */
+#app > .fireflies { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; display: none; }
+#app > *:not(.fireflies) { position: relative; z-index: 1; }
+
 /* top bar */
 .topbar { flex: 0 0 auto; position: relative; display: flex; align-items: center; justify-content: center; gap: 9px;
   padding: 14px 12px; color: #fff;
@@ -571,19 +575,19 @@ h1, h2, h3, .brand { font-family: var(--font-head); letter-spacing: .2px; }
   --sh-3: 0 10px 26px rgba(0,0,0,.50), 0 22px 44px rgba(0,0,0,.55);
   --grad-topbar: linear-gradient(180deg, #4a3526, #2c1e13);
 }
-/* Sort Sol — dusk twilight, after the starling murmuration game. Deep indigo sky
-   up high, warm setting-sun amber low on the horizon, cream-star ink, dusk-purple bar. */
-[data-theme="sortsol"] {
+/* Solnedgang — dusk twilight, after the Sort Sol murmuration game. Deep indigo sky
+   up high, a strong warm setting-sun amber low on the horizon, cream-star ink, dusk-purple bar. */
+[data-theme="solnedgang"] {
   --ink: #f1ead6; --ink-soft: #c8c2dc; --muted: #98a0c2; --faint: #6f7498;
   --line: #2b3158; --line-soft: #232949;
   --bg: #0c1330; --cream: #182149; --sunken: #121838; --paper: #1b2452; --raised: #243066;
   --bg-glow: #2a285e;
-  --wool: #eba06b; --wool-dk: #d4884f; --wool-lt: #f6bb86; --wool-soft: #2a2446;
+  --wool: #f5994b; --wool-dk: #e07f31; --wool-lt: #ffb368; --wool-soft: #2c2444;
   --sage: #7497bc; --sage-dk: #5d7ca0; --sage-soft: #1f2a4c;
   --rose: #cc8fb2; --gold: #ffe08a; --gold-dk: #e3bd72; --gold-soft: #2d2a4c;
   --danger: #ea7a6c;
   --page-top: #131a44; --page-bottom: #0a1030;
-  --glow-top: rgba(123,90,138,.24); --glow-bottom: rgba(232,160,107,.22);
+  --glow-top: rgba(123,90,138,.24); --glow-bottom: rgba(245,150,70,.40);
   --sh-1: 0 1px 2px rgba(0,0,0,.35), 0 1px 3px rgba(0,0,0,.35);
   --sh-2: 0 2px 8px rgba(0,0,0,.40), 0 8px 20px rgba(0,0,0,.48);
   --sh-3: 0 10px 26px rgba(0,0,0,.52), 0 22px 44px rgba(0,0,0,.58);
