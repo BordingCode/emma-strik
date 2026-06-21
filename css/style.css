@@ -8,6 +8,9 @@
   /* tonal surfaces — elevation read partly through tone */
   --bg: #e4d7bf; --cream: #f5eee1; --sunken: #efe7d7; --paper: #fffdf8; --raised: #fffefb;
   --bg-glow: #ece0cb; /* soft glow at the top of the page (themed) */
+  /* page wash — themeable so dark themes don't show a hardcoded light gradient */
+  --page-top: #fbf2e4; --page-bottom: var(--cream);
+  --glow-top: rgba(176,101,74,.18); --glow-bottom: rgba(95,122,87,.14);
   /* primary terracotta ramp */
   --wool: #b0654a; --wool-dk: #8d4c37; --wool-lt: #c8825f; --wool-soft: #f1ddd0;
   /* secondary sage + tertiary honey + accents */
@@ -44,9 +47,9 @@ h1, h2, h3, .brand { font-family: var(--font-head); letter-spacing: .2px; }
   /* warm wash + soft glows: terracotta warmth up top, a whisper of sage low down */
   background:
     var(--grain),
-    radial-gradient(100% 52% at 50% -3%, rgba(176,101,74,.18), transparent 64%),
-    radial-gradient(95% 46% at 50% 103%, rgba(95,122,87,.14), transparent 62%),
-    linear-gradient(180deg, #fbf2e4 0%, var(--cream) 50%);
+    radial-gradient(100% 52% at 50% -3%, var(--glow-top), transparent 64%),
+    radial-gradient(95% 46% at 50% 103%, var(--glow-bottom), transparent 62%),
+    linear-gradient(180deg, var(--page-top) 0%, var(--page-bottom) 60%);
   box-shadow: 0 0 60px rgba(60,40,20,.22); }
 
 /* top bar */
@@ -549,20 +552,42 @@ h1, h2, h3, .brand { font-family: var(--font-head); letter-spacing: .2px; }
   --sage: #6f8a6a; --sage-dk: #5a7355; --sage-soft: #e6efe2;
   --gold: #c79a4f; --gold-dk: #8f6f25; --gold-soft: #f5ecd6;
 }
-/* Aften — warm dark mode. Inverts the neutral ramp; keeps warm light accents. */
+/* Aften — deep, cozy warm dark mode. Grimoire-inspired depth: a near-black warm
+   espresso base, dimensional glow at the top, jewel-warm terracotta + honey accents
+   that pop, and soft elevated surfaces (no flat muddy browns). */
 [data-theme="aften"] {
-  --ink: #f0e7da; --ink-soft: #cbbfae; --muted: #9c8f7e; --faint: #776c5d;
-  --line: #3a3229; --line-soft: #2e2922;
-  --bg: #1c1916; --cream: #272320; --sunken: #221e1b; --paper: #2b2622; --raised: #332d28;
-  --bg-glow: #2a221a;
-  --wool: #c8825f; --wool-dk: #b0654a; --wool-lt: #d89a78; --wool-soft: #3d322a;
-  --sage: #7f9a76; --sage-dk: #6a855f; --sage-soft: #2f352b;
-  --rose: #cf9b8e; --gold: #d6b06a; --gold-dk: #b78f48; --gold-soft: #352e22;
-  --danger: #d9685a;
-  --sh-1: 0 1px 2px rgba(0,0,0,.30), 0 1px 3px rgba(0,0,0,.30);
-  --sh-2: 0 2px 6px rgba(0,0,0,.35), 0 6px 16px rgba(0,0,0,.40);
-  --sh-3: 0 8px 20px rgba(0,0,0,.45), 0 18px 38px rgba(0,0,0,.50);
-  --grad-topbar: linear-gradient(180deg, #4a3d31, #352c24);
+  --ink: #f4ede1; --ink-soft: #cfc2af; --muted: #9b8d7a; --faint: #736756;
+  --line: #3a2f25; --line-soft: #2c241d;
+  --bg: #15110d; --cream: #221b15; --sunken: #1b1510; --paper: #271f18; --raised: #322820;
+  --bg-glow: #2e2014;
+  --wool: #df8b5d; --wool-dk: #c5734a; --wool-lt: #efa279; --wool-soft: #3a2b20;
+  --sage: #8aa37d; --sage-dk: #6f8a63; --sage-soft: #2b3328;
+  --rose: #d8a492; --gold: #e6bf73; --gold-dk: #c69a4f; --gold-soft: #382e1d;
+  --danger: #e3705e;
+  --page-top: #271a10; --page-bottom: #15110d;
+  --glow-top: rgba(223,139,93,.16); --glow-bottom: rgba(138,163,125,.09);
+  --sh-1: 0 1px 2px rgba(0,0,0,.35), 0 1px 3px rgba(0,0,0,.35);
+  --sh-2: 0 2px 8px rgba(0,0,0,.40), 0 8px 20px rgba(0,0,0,.45);
+  --sh-3: 0 10px 26px rgba(0,0,0,.50), 0 22px 44px rgba(0,0,0,.55);
+  --grad-topbar: linear-gradient(180deg, #4a3526, #2c1e13);
+}
+/* Sort Sol — dusk twilight, after the starling murmuration game. Deep indigo sky
+   up high, warm setting-sun amber low on the horizon, cream-star ink, dusk-purple bar. */
+[data-theme="sortsol"] {
+  --ink: #f1ead6; --ink-soft: #c8c2dc; --muted: #98a0c2; --faint: #6f7498;
+  --line: #2b3158; --line-soft: #232949;
+  --bg: #0c1330; --cream: #182149; --sunken: #121838; --paper: #1b2452; --raised: #243066;
+  --bg-glow: #2a285e;
+  --wool: #eba06b; --wool-dk: #d4884f; --wool-lt: #f6bb86; --wool-soft: #2a2446;
+  --sage: #7497bc; --sage-dk: #5d7ca0; --sage-soft: #1f2a4c;
+  --rose: #cc8fb2; --gold: #ffe08a; --gold-dk: #e3bd72; --gold-soft: #2d2a4c;
+  --danger: #ea7a6c;
+  --page-top: #131a44; --page-bottom: #0a1030;
+  --glow-top: rgba(123,90,138,.24); --glow-bottom: rgba(232,160,107,.22);
+  --sh-1: 0 1px 2px rgba(0,0,0,.35), 0 1px 3px rgba(0,0,0,.35);
+  --sh-2: 0 2px 8px rgba(0,0,0,.40), 0 8px 20px rgba(0,0,0,.48);
+  --sh-3: 0 10px 26px rgba(0,0,0,.52), 0 22px 44px rgba(0,0,0,.58);
+  --grad-topbar: linear-gradient(180deg, #6a4f86, #382c5e);
 }
 
 /* theme picker swatches (Garn ▸ Udseende) */
