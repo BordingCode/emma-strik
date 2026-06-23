@@ -260,6 +260,10 @@ h1, h2, h3, .brand { font-family: var(--font-head); letter-spacing: .2px; }
 .inv-sub { font-size: 12.5px; color: var(--muted); }
 .inv-note { font-size: 12px; color: var(--sage); font-style: italic; margin-top: 2px; }
 .empty.small { padding: 14px 10px; font-size: 14px; }
+.invrow { padding-left: 8px; }
+.inv-thumb { flex: 0 0 auto; width: 46px; height: 46px; border-radius: 10px; background: var(--cream) center/cover no-repeat; border: 1px solid var(--line); display: flex; align-items: center; justify-content: center; font-size: 22px; }
+.inv-thumb.noimg { opacity: .85; }
+.ghost.small { padding: 6px 10px; font-size: 13px; margin-top: 6px; }
 .form select { display: block; width: 100%; margin-top: 4px; background: var(--cream); border: 1px solid var(--line); border-radius: 10px; padding: 12px; font-size: 16px; color: var(--ink); }
 .form input[type=file] { display: block; width: 100%; margin-top: 4px; font-size: 14px; }
 
