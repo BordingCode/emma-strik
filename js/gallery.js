@@ -313,17 +313,46 @@ function newCollection(addPattern) {
   };
 }
 
+/* inline category create for use inside another form (e.g. upload) — returns the new
+   collection via callback without re-rendering, so the open form stays put */
+function inlineNewCategory(onCreate) {
+  let chosen = DEFAULT_ICON;
+  const f = E('div', 'form');
+  const grid = ICON_GROUPS.map((g) => `<div class="icogrp">${g.label}</div><div class="icorow">${g.ids.map((id) => `<button type="button" class="icobtn${id === chosen ? ' on' : ''}" data-ic="${id}">${CAT_ICONS[id]}</button>`).join('')}</div>`).join('');
+  f.innerHTML = `<h2>Ny kategori</h2>
+    <label>Navn<input id="nc-name" type="text" maxlength="30" placeholder="fx Babytøj, Huer, Til mor"></label>
+    <div class="icolabel">Vælg ikon</div><div class="icopick">${grid}</div>
+    <div class="form-actions"><button class="ghost cancel">Annuller</button><button class="primary ok">Opret</button></div>`;
+  const m = M(f);
+  f.querySelectorAll('.icobtn').forEach((b) => b.onclick = () => { chosen = b.dataset.ic; f.querySelectorAll('.icobtn').forEach((x) => x.classList.toggle('on', x === b)); });
+  f.querySelector('.cancel').onclick = () => { m.close(); onCreate(null); };
+  f.querySelector('.ok').onclick = () => {
+    const name = f.querySelector('#nc-name').value.trim(); if (!name) return;
+    const cat = { id: uid(), name, icon: chosen, items: [] };
+    collections.push(cat); saveCollections();
+    m.close(); onCreate(cat);
+  };
+}
+
 function uploadModal() {
   const f = E('div', 'form');
+  // her own categories (shared with Projekter); allows creating a new one inline
+  const catOpts = `<option value="">— ingen —</option>` + collections.map((c) => `<option value="${c.id}">${esc(c.name)}</option>`).join('') + `<option value="__new">+ Ny kategori…</option>`;
   f.innerHTML = `<h2>Tilføj egne opskrifter</h2>
     <p class="hint" style="margin-bottom:10px">Vælg en eller flere PDF-filer eller billeder fra din telefon. De gemmes på din enhed.</p>
     <label>Filer<input id="up-file" type="file" accept="application/pdf,image/*" multiple></label>
     <div id="up-list" class="up-list" hidden></div>
     <label>Designer (valgfri, fælles for alle)<input id="up-designer" type="text" maxlength="40"></label>
-    <label>Kategori (fælles for alle)<select id="up-cat">${CATEGORIES.filter((c) => c.id !== 'all').map((c) => `<option value="${c.id}">${esc(c.label)}</option>`).join('')}</select></label>
+    <label>Kategori (fælles for alle)<select id="up-cat">${catOpts}</select></label>
     <div id="up-status" class="hint" hidden style="margin-bottom:8px"></div>
     <div class="form-actions"><button class="ghost cancel">Annuller</button><button class="primary ok">Gem</button></div>`;
   const m = M(f);
+  const catSel = f.querySelector('#up-cat');
+  catSel.onchange = () => {
+    if (catSel.value !== '__new') return;
+    catSel.value = '';
+    inlineNewCategory((cat) => { if (cat) { const o = document.createElement('option'); o.value = cat.id; o.textContent = cat.name; catSel.insertBefore(o, catSel.querySelector('option[value="__new"]')); catSel.value = cat.id; } });
+  };
   const fileInp = f.querySelector('#up-file');
   const list = f.querySelector('#up-list');
   const okBtn = f.querySelector('.ok');
@@ -350,21 +379,27 @@ function uploadModal() {
     if (!files.length) { alert('Vælg mindst én fil først.'); return; }
     const nameInputs = [...list.querySelectorAll('input[data-i]')];
     const designer = f.querySelector('#up-designer').value.trim();
-    const category = f.querySelector('#up-cat').value;
+    const colVal = catSel.value;
+    const collectionId = colVal && colVal !== '__new' ? colVal : null;
     okBtn.disabled = true; cancelBtn.disabled = true; fileInp.disabled = true;
     status.hidden = false;
-    let saved = 0; const failed = [];
+    let saved = 0; const failed = []; const savedCardIds = [];
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
       if (files.length > 1) status.textContent = `Gemmer ${i + 1} af ${files.length}…`;
       const inp = nameInputs.find((n) => +n.dataset.i === i);
       const name = (inp && inp.value.trim()) || baseName(file.name);
-      const rec = { id: uid(), name, designer, category, mime: file.type || 'application/octet-stream', blob: file, addedAt: Date.now() + i };
+      const rec = { id: uid(), name, designer, category: 'sweater', mime: file.type || 'application/octet-stream', blob: file, addedAt: Date.now() + i };
       if ((rec.mime || '').includes('pdf')) { try { rec.thumb = await pdfThumb(file); } catch (e) {} }
-      try { await putUpload(rec); uploads.push(rec); saved++; }
+      try { await putUpload(rec); uploads.push(rec); saved++; savedCardIds.push('up:' + rec.id); }
       catch (e) { failed.push(file.name); }
     }
-    m.close(); filters.view = 'mine'; filters.mine = 'all'; render();
+    // file them under the chosen category (matches how Projekter stores categories)
+    if (collectionId && savedCardIds.length) {
+      const col = collections.find((c) => c.id === collectionId);
+      if (col) { col.items = (col.items || []).concat(savedCardIds.filter((id) => !(col.items || []).includes(id))); saveCollections(); }
+    }
+    m.close(); filters.view = 'mine'; filters.mine = 'all'; filters.collection = collectionId; render();
     if (failed.length) {
       alert(`${saved} opskrift${saved === 1 ? '' : 'er'} gemt.\n${failed.length} kunne ikke gemmes (måske for store til lageret):\n` + failed.join('\n'));
     }
