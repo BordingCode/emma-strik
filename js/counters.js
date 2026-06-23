@@ -7,7 +7,7 @@ import { CAT_ICONS, ICON_GROUPS, DEFAULT_ICON } from './caticons.js';
 import { dateBtnHtml, wireDateButtons } from './datepicker.js';
 
 let E, M, node;
-let projects = [], activeId = null;
+let projects = [], activeId = null, todos = [];
 let wakeLock = null;
 let statusPeriod = { y: 'cur', m: 'all' }; // y: 'all' | 'cur' | <year>; m: 'all' | 0..11
 const MONTHS = ['januar', 'februar', 'marts', 'april', 'maj', 'juni', 'juli', 'august', 'september', 'oktober', 'november', 'december'];
@@ -41,11 +41,18 @@ export function initCounters(container, helpers) {
   E = helpers.el; M = helpers.modal; node = container;
   projects = store.get('projects', []);
   activeId = store.get('activeProject', null);
+  todos = store.get('todos', []);
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && activeId) requestWake(); });
+  // let Indstillinger re-draw this page when the to-do toggle changes
+  window.__esCounters = { refresh: () => { projects = store.get('projects', []); todos = store.get('todos', []); render(); } };
   render();
 }
 
 function save() { store.set('projects', projects); store.set('activeProject', activeId); }
+function saveTodos() { store.set('todos', todos); }
+
+/* ---------------- to-do / wishlist of upcoming projects ---------------- */
+const todoEnabled = () => store.get('showTodo', true);
 const active = () => projects.find((p) => p.id === activeId);
 
 async function requestWake() { try { if ('wakeLock' in navigator && !wakeLock) { wakeLock = await navigator.wakeLock.request('screen'); wakeLock.addEventListener('release', () => { wakeLock = null; }); } } catch (e) {} }
@@ -142,6 +149,8 @@ function renderList() {
   const add = E('button', 'primary big', '+ Nyt projekt');
   add.onclick = () => projectModal();
   node.append(add);
+  // optional wishlist of upcoming projects (toggle in Indstillinger)
+  if (todoEnabled()) renderTodo();
   // Stats are a summary, not the headline — show them below the projects.
   if (projects.length) node.append(statusCard());
   if (done.length) {
@@ -151,6 +160,103 @@ function renderList() {
     node.append(dl);
   }
   fillPhotos();
+}
+
+/* ---- to-do list: ideas for upcoming projects (name + yarn idea + #nøgler) ---- */
+function renderTodo() {
+  node.append(E('h2', 'sechead', '📋 Vil jeg strikke'));
+  node.append(E('p', 'hint', 'Idéer til kommende projekter — navn, garn og hvor mange nøgler du regner med.'));
+  const list = E('div', 'todolist');
+  if (!todos.length) list.append(E('p', 'empty small', 'Ingen idéer endnu. Skriv dit næste projekt op herunder.'));
+  todos.forEach((t) => list.append(todoCard(t)));
+  node.append(list);
+  const add = E('button', 'ghost wide', '+ Tilføj idé');
+  add.onclick = () => todoModal();
+  node.append(add);
+}
+
+function todoCard(t) {
+  const card = E('div', 'todocard' + (t.done ? ' done' : ''));
+  const chk = E('button', 'todo-check' + (t.done ? ' on' : ''), t.done ? '✓' : '');
+  chk.setAttribute('aria-label', t.done ? 'Fjern flueben' : 'Marker som klar/lavet');
+  chk.onclick = () => { t.done = !t.done; saveTodos(); renderList(); };
+  const sub = t.yarn ? `<span class="todo-sub">${esc(t.yarn)}</span>` : '';
+  const note = t.notes ? `<span class="todo-note">${esc(t.notes)}</span>` : '';
+  const dots = (t.colors && t.colors.length)
+    ? `<span class="todo-dots">${t.colors.map((c) => `<span class="todo-dot" style="background:${esc(c)}"></span>`).join('')}</span>` : '';
+  const mid = E('button', 'todo-main', `<b>${esc(t.name)}</b>${sub}${note}${dots}`);
+  mid.onclick = () => todoModal(t);
+  const balls = t.balls ? `<span class="todo-balls">${esc(String(t.balls))} ${Number(t.balls) === 1 ? 'nøgle' : 'nøgler'}</span>` : '';
+  card.append(chk, mid, E('div', 'todo-right', balls));
+  return card;
+}
+
+function todoModal(existing) {
+  const f = E('div', 'form');
+  // suggest yarns she has used or has in her stash
+  const knownYarns = [...new Set([...projects.flatMap(yarnsOf), ...store.get('stash', []).map((s) => s.name)].filter(Boolean))];
+  const yarnOpts = knownYarns.map((y) => `<option value="${esc(y)}">`).join('');
+  f.innerHTML = `<h2>${existing ? 'Rediger idé' : 'Ny projekt-idé'}</h2>
+    <label>Projekt<input id="t-name" type="text" maxlength="40" placeholder="fx Stribet sweater" value="${existing ? esc(existing.name) : ''}"></label>
+    <label>Garn-idé<input id="t-yarn" type="text" list="t-yarnlist" maxlength="60" placeholder="fx Drops Air, lyseblå" value="${existing ? esc(existing.yarn || '') : ''}"></label>
+    <datalist id="t-yarnlist">${yarnOpts}</datalist>
+    <label>Antal nøgler (ca.)<input id="t-balls" type="number" inputmode="numeric" min="0" placeholder="fx 8" value="${existing && existing.balls != null ? esc(String(existing.balls)) : ''}"></label>
+    <label>Noter<textarea id="t-notes" rows="2" maxlength="300" placeholder="fri tekst — fx link til mønster, mål, idéer">${existing ? esc(existing.notes || '') : ''}</textarea></label>
+    <div class="formsec-min">Farver <span class="fm-hint">(vælg de farver du vil bruge)</span></div>
+    <div id="t-colors" class="colorrow"></div>
+    <label class="addcolor">+ Tilføj farve<input id="t-colorin" type="color" value="#c87a5b"></label>
+    ${existing ? '<button type="button" class="ghost wide start">Start som projekt →</button>' : ''}
+    <div class="form-actions">${existing ? '<button class="minor danger del">Slet</button>' : ''}<button class="ghost cancel">Annuller</button><button class="primary ok">Gem</button></div>`;
+  const m = M(f);
+  // colour swatches she can add/remove (the colour input is the wheel/picker)
+  let colors = existing && Array.isArray(existing.colors) ? [...existing.colors] : [];
+  const colorsBox = f.querySelector('#t-colors');
+  const drawColors = () => {
+    colorsBox.innerHTML = '';
+    if (!colors.length) { colorsBox.append(E('span', 'colorhint', 'Ingen farver valgt endnu')); return; }
+    colors.forEach((c, i) => {
+      const sw = E('button', 'colorchip', `<span class="cc-dot" style="background:${esc(c)}"></span><span class="cc-x">×</span>`);
+      sw.type = 'button'; sw.title = c;
+      sw.onclick = () => { colors.splice(i, 1); drawColors(); };
+      colorsBox.append(sw);
+    });
+  };
+  drawColors();
+  f.querySelector('#t-colorin').onchange = (e) => { const v = e.target.value; if (v && !colors.includes(v)) { colors.push(v); drawColors(); } };
+  f.querySelector('.cancel').onclick = () => m.close();
+  const del = f.querySelector('.del');
+  if (del) del.onclick = () => { if (confirm('Slet idéen "' + existing.name + '"?')) { todos = todos.filter((x) => x !== existing); saveTodos(); m.close(); renderList(); } };
+  const start = f.querySelector('.start');
+  if (start) start.onclick = () => { m.close(); startTodoAsProject(existing); };
+  f.querySelector('.ok').onclick = () => {
+    const name = f.querySelector('#t-name').value.trim() || 'Ny idé';
+    const yarn = f.querySelector('#t-yarn').value.trim();
+    const notes = f.querySelector('#t-notes').value.trim();
+    const bv = parseInt(f.querySelector('#t-balls').value, 10);
+    const balls = Number.isFinite(bv) && bv > 0 ? bv : null;
+    if (existing) Object.assign(existing, { name, yarn, balls, notes, colors });
+    else todos.push({ id: uid(), name, yarn, balls, notes, colors, done: false });
+    saveTodos(); m.close(); renderList();
+  };
+}
+
+// turn a wishlist idea into a real project (prefills name + yarn), then opens it
+function startTodoAsProject(t) {
+  // carry the idea's notes, colour list and nøgle-estimate into the project notes
+  const bits = [];
+  if (t.notes) bits.push(t.notes);
+  if (t.balls) bits.push('Ca. ' + t.balls + ' nøgler');
+  if (t.colors && t.colors.length) bits.push('Farver: ' + t.colors.join(', '));
+  const p = {
+    id: uid(), name: t.name, yarns: t.yarn ? [t.yarn] : [], needles: [],
+    notes: bits.join(' · '), categoryId: null,
+    size: '', gauge: '', recipient: '', startDate: todayStr(), endDate: '',
+    gramsUsed: null, runM: null, runG: 50,
+    counters: [{ id: uid(), label: 'Omgange', value: 0, wrapAt: 0, repeats: 0, main: true }],
+  };
+  projects.push(p);
+  todos = todos.filter((x) => x !== t);
+  activeId = p.id; save(); saveTodos(); requestWake(); renderDetail();
 }
 
 function renderDetail() {

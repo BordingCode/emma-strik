@@ -36,6 +36,18 @@ function render() {
   });
   node.append(grid);
 
+  // ---- features: to-do list on the Projekter page ----
+  node.append(E('h2', 'sechead', 'Projekter'));
+  node.append(E('p', 'hint', 'Vis en lille to-do liste på Projekter-siden med idéer til kommende projekter — navn, garn-idé og antal nøgler.'));
+  const todoOn = store.get('showTodo', true);
+  const swrow = E('div', 'switchrow');
+  swrow.append(E('span', 'sw-label', 'To-do liste på Projekter'));
+  const sw = E('button', 'switch' + (todoOn ? ' on' : ''), '<span class="sw-knob"></span>');
+  sw.setAttribute('role', 'switch'); sw.setAttribute('aria-checked', String(todoOn));
+  sw.onclick = () => { store.set('showTodo', !store.get('showTodo', true)); if (window.__esCounters) window.__esCounters.refresh(); render(); };
+  swrow.append(sw);
+  node.append(swrow);
+
   // ---- device sync ----
   node.append(E('h2', 'sechead', 'Synkronisering'));
   node.append(E('p', 'hint', 'Hav den samme profil på flere enheder (fx telefon og tablet). Det er gratis.'));
