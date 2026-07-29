@@ -21,10 +21,11 @@ export const CAT_ICONS = {
   bag:      S('<path d="M6.5 9h11l-1 11h-9z"/><path d="M9.5 9q0-4 2.5-4t2.5 4"/>'),
   yarn:     S('<circle cx="12" cy="12" r="8"/><path d="M5.5 9.5q6.5 3 13 0M4.5 13q7.5 4 15 0M9.5 4.5q-3 6.5 0 15M14.5 4.5q3 6.5 0 15" stroke-width="1.1"/>'),
   doc:      S('<path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4"/><path d="M9.5 12h5M9.5 15.5h5"/>'),
+  toy:      S('<circle cx="8.7" cy="5.4" r="1.9"/><circle cx="15.3" cy="5.4" r="1.9"/><circle cx="12" cy="9" r="3.9"/><path d="M12 12.9q-4.6 0-4.6 4.1V19q0 2 2 2h5.2q2 0 2-2v-2q0-4.1-4.6-4.1z"/>'),
 };
 
 // Icon for a pattern card placeholder, by built-in pattern category.
-const THUMB = { sweater: 'sweater', accessory: 'scarf', baby: 'baby', home: 'blanket' };
+const THUMB = { sweater: 'sweater', accessory: 'scarf', baby: 'baby', home: 'blanket', toy: 'toy' };
 export const catThumb = (category) => CAT_ICONS[THUMB[category]] || CAT_ICONS.yarn;
 
 // Grouped for the picker UI.
@@ -34,5 +35,6 @@ export const ICON_GROUPS = [
   { label: 'Tilbehør', ids: ['beanie', 'scarf', 'shawl', 'mittens', 'socks', 'bag'] },
   { label: 'Baby', ids: ['baby'] },
   { label: 'Hjem', ids: ['blanket', 'yarn'] },
+  { label: 'Legetøj', ids: ['toy'] },
 ];
 export const DEFAULT_ICON = 'yarn';

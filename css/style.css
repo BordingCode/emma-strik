@@ -164,7 +164,7 @@ h1, h2, h3, .brand { font-family: var(--font-head); letter-spacing: .2px; }
 .calc h2 { font-size: 17px; margin-bottom: 4px; }
 .csub { color: var(--muted); font-size: 13px; margin-bottom: 10px; line-height: 1.4; }
 .calc .nl { display: block; font-size: 13px; color: var(--muted); margin-bottom: 10px; }
-.calc input[type=number] { display: block; width: 100%; margin-top: 4px; background: var(--cream);
+.calc input[type=number], .calc select { display: block; width: 100%; margin-top: 4px; background: var(--cream);
   border: 1px solid var(--line); border-radius: 10px; padding: 11px; font-size: 16px; color: var(--ink); }
 .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 10px; }
 .mini { font-size: 13px; color: var(--ink); margin: 6px 0 4px; font-weight: 600; }
@@ -203,6 +203,7 @@ h1, h2, h3, .brand { font-family: var(--font-head); letter-spacing: .2px; }
 .thumb.t-accessory { background: linear-gradient(135deg, #d9e0cf, #bcd0b0); }
 .thumb.t-baby { background: linear-gradient(135deg, #f0dde0, #e6c4cc); }
 .thumb.t-home { background: linear-gradient(135deg, #e2dccb, #cdbfa0); }
+.thumb.t-toy { background: linear-gradient(135deg, #ecdcc6, #dcc09a); }
 .thumb .ph { font-size: 40px; opacity: .65; }
 .thumb img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .favbtn { position: absolute; top: 6px; right: 6px; width: 34px; height: 34px; border-radius: 50%; border: none;
@@ -292,6 +293,7 @@ h1, h2, h3, .brand { font-family: var(--font-head); letter-spacing: .2px; }
 /* ============ shop/owned status + finished projects ============ */
 .tag.ejet { background: var(--gold-soft); color: #9a7320; border-color: #ead9b0; }
 .tag.kob { background: #e7eef5; color: #4f6f8f; border-color: #d2e0ee; }
+.tag.haekl { background: var(--wool-soft); color: var(--wool-dk); border-color: #e6c9b8; }
 .projcard.done { opacity: .62; }
 .projcard.done .pc-num { color: var(--sage); }
 .donetick { color: var(--sage); }
@@ -357,6 +359,22 @@ h1, h2, h3, .brand { font-family: var(--font-head); letter-spacing: .2px; }
 .sttile b { display: block; font-family: var(--font-head); font-size: 25px; color: var(--wool-dk); line-height: 1; font-variant-numeric: lining-nums tabular-nums; }
 .sttile span { font-size: 11px; color: var(--muted); }
 .formsec { font-size: 12px; color: var(--muted); font-weight: 600; margin: 6px 0; border-top: 1px solid var(--line); padding-top: 10px; }
+
+/* ============ strik / hækling ============ */
+/* Vælgeren øverst i projekt-formularen — to store, tydelige knapper. */
+.craftpick { display: flex; gap: 8px; margin: 4px 0 14px; }
+.craftbtn { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 4px;
+  background: var(--cream); border: 1px solid var(--line); border-radius: 14px; padding: 11px 8px;
+  color: var(--muted); font-size: 14px; font-weight: 600; cursor: pointer; transition: background .15s, border-color .15s, color .15s; }
+.craftbtn .cb-emoji { font-size: 22px; line-height: 1; }
+.craftbtn.on { background: var(--wool-soft); border-color: var(--wool); color: var(--wool-dk); box-shadow: var(--sh-1); }
+/* Lille mærke på projektkort, så man kan se på listen hvad der er hvad. */
+.craftbadge { display: inline-block; margin-right: 5px; vertical-align: -0.14em; color: var(--wool); }
+.craftbadge .crafticon { width: 1.05em; height: 1.05em; }
+.crafticon { width: 1em; height: 1em; display: inline-block; vertical-align: -0.14em; }
+.craftbtn .cb-emoji .crafticon { width: 24px; height: 24px; vertical-align: 0; }
+.craftseg .ut-btn .crafticon { margin-right: 2px; }
+.tag.haekl .crafticon { width: .95em; height: .95em; }
 
 /* ============ pattern reader ============ */
 .reader { position: fixed; inset: 0; z-index: 200; background: #2a241f; display: flex; flex-direction: column; }
@@ -518,6 +536,27 @@ h1, h2, h3, .brand { font-family: var(--font-head); letter-spacing: .2px; }
 .ut-btn { flex: 1; border: none; background: none; border-radius: 9px; padding: 9px; font-size: 14px;
   font-weight: 600; color: var(--muted); cursor: pointer; }
 .ut-btn.on { background: var(--paper); color: var(--wool-dk); box-shadow: var(--sh-1); }
+/* håndværks-skifter øverst i Beregner — lidt mere vægt end en almindelig enheds-toggle */
+.craftseg { margin: 0 0 16px; }
+.craftseg .ut-btn { padding: 11px 6px; font-size: 15px; white-space: nowrap; }
+
+/* brede tabeller må rulle for sig selv, så siden aldrig ruller sidelæns på telefon */
+.tblwrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.tblwrap .wtbl { min-width: 100%; }
+.abbrtbl td { vertical-align: top; font-size: 13px; }
+.abbrtbl .ab-name { display: block; font-size: 11px; color: var(--muted); }
+.amitbl td:first-child, .amitbl th:first-child { width: 3.2em; }
+.amitbl td:last-child, .amitbl th:last-child { text-align: right; }
+.srcnote { font-size: 11px; color: var(--faint); line-height: 1.5; margin-top: 8px; }
+/* advarslen om US/UK-masker — den fælde ødelægger et projekt, så den skal ses */
+.warnbox { background: var(--gold-soft); border: 1px solid var(--gold); border-radius: 12px; padding: 12px 14px; margin: 4px 0 14px; }
+/* kun overskriften er en blok — fed tekst inde i brødteksten skal blive på linjen */
+.warnbox > b { display: flex; align-items: center; gap: 7px; font-size: 14px; color: var(--gold-dk); margin-bottom: 6px; }
+.warnbox > b svg { flex: 0 0 auto; width: 18px; height: 18px; }
+.warnbox p b { color: var(--gold-dk); }
+.warnbox p { font-size: 13.5px; line-height: 1.55; color: var(--ink-soft); margin: 0 0 6px; }
+.warnbox p:last-child { margin-bottom: 0; }
+.warnbox .wtip { font-size: 12.5px; color: var(--muted); }
 
 /* ============================================================
    THEMES — set data-theme on <html>. Default (no attr) = Uld.

@@ -4,6 +4,7 @@ import { PATTERNS, CATEGORIES, CAT_ICON } from '../data/patterns.js';
 import { store, uid } from './store.js';
 import { allUploads, putUpload, delUpload } from './idb.js';
 import { CAT_ICONS, ICON_GROUPS, DEFAULT_ICON, catThumb } from './caticons.js';
+import { CRAFTS } from './craft.js';
 import { openReader } from './reader.js';
 import { pdfThumb } from './pdfthumb.js';
 import { getVideos, saveVideos, videosForPattern, categoryIdsForPattern } from './videos.js';
@@ -17,7 +18,7 @@ const urlCache = new Map();
 
 export async function initGallery(container, helpers) {
   node = container; M = helpers.modal;
-  filters = { view: 'mine', cat: 'all', freeOnly: false, buyOnly: false, mine: 'all', collection: null, q: '' };
+  filters = { view: 'mine', cat: 'all', craft: 'all', freeOnly: false, buyOnly: false, mine: 'all', collection: null, q: '' };
   favs = new Set(store.get('favorites', []));
   owned = new Set(store.get('owned', []));
   collections = store.get('collections', []);
@@ -45,6 +46,8 @@ function uploadCard(u) {
 }
 const allCards = () => PATTERNS.concat(uploads.map(uploadCard));
 const isOwned = (p) => p.own || owned.has(p.id);
+// Opskrifter uden `craft` er strik (hele det oprindelige bibliotek).
+const patCraft = (p) => p.craft || 'strik';
 
 function render() {
   node.innerHTML = '';
@@ -92,6 +95,13 @@ function render() {
     ctr.append(colRow);
   } else {
     ctr.append(search);
+    // strik / hækling først — det er det groveste valg, så det står øverst
+    const cseg = E('div', 'unittoggle craftseg');
+    [['all', 'Alle'], ['strik', CRAFTS.strik.icon + ' Strik'], ['haekling', CRAFTS.haekling.icon + ' Hækling']].forEach(([k, lbl]) => {
+      const b = E('button', 'ut-btn' + (filters.craft === k ? ' on' : ''), lbl);
+      b.onclick = () => { filters.craft = k; render(); }; cseg.append(b);
+    });
+    ctr.append(cseg);
     ctr.append(E('div', 'rowlabel', 'Kategorier'));
     const chips = E('div', 'chips');
     CATEGORIES.forEach((c) => {
@@ -124,7 +134,8 @@ function regrid() {
       && (!filters.q || (p.name + ' ' + p.designer).toLowerCase().includes(filters.q)));
   } else {
     list = PATTERNS.filter((p) =>
-      (filters.cat === 'all' || p.category === filters.cat)
+      (filters.craft === 'all' || patCraft(p) === filters.craft)
+      && (filters.cat === 'all' || p.category === filters.cat)
       && (!filters.freeOnly || (p.free && !isOwned(p)))
       && (!filters.buyOnly || (!p.free && !isOwned(p)))
       && (!filters.q || (p.name + ' ' + p.designer + ' ' + p.source).toLowerCase().includes(filters.q)));
@@ -162,6 +173,7 @@ function card(p) {
 
   const tags = E('div', 'ptags');
   tags.innerHTML = `${statusTag(p)}
+    ${patCraft(p) === 'haekling' ? `<span class="tag haekl">${CRAFTS.haekling.icon} Hækling</span>` : ''}
     ${p.difficulty ? `<span class="tag">${DIFF[p.difficulty] || p.difficulty}</span>` : ''}
     ${p.yarnWeight ? `<span class="tag">${p.yarnWeight}</span>` : ''}`;
   const body = E('div', 'pbody');

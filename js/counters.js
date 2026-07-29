@@ -5,6 +5,7 @@ import { openReader } from './reader.js';
 import { allUploads, getUpload, putPhoto, getPhoto } from './idb.js';
 import { CAT_ICONS, ICON_GROUPS, DEFAULT_ICON } from './caticons.js';
 import { dateBtnHtml, wireDateButtons } from './datepicker.js';
+import { CRAFT_LIST, craftOf, craftBadge, mmFmt } from './craft.js';
 
 let E, M, node;
 let projects = [], activeId = null, todos = [];
@@ -33,7 +34,6 @@ const projMeters = (p) => {
 const yarnsOf = (p) => (p.yarns && p.yarns.length) ? p.yarns : (p.yarn ? [p.yarn] : []);
 const needlesOf = (p) => (p.needles && p.needles.length) ? p.needles : (p.needle ? [p.needle] : []);
 const projTags = (p) => [...yarnsOf(p), ...needlesOf(p)];
-const needleFmt = (mm) => (mm % 1 === 0 ? String(mm) : mm.toFixed(1).replace('.', ',')) + ' mm';
 const fmtDate = (s) => { if (!s) return ''; const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s); return m ? `${m[3]}.${m[2]}.${m[1]}` : s; };
 const todayStr = () => { const d = new Date(); const p = (n) => String(n).padStart(2, '0'); return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`; };
 
@@ -78,7 +78,7 @@ function render() { if (active()) renderDetail(); else { releaseWake(); renderLi
 function projCard(p) {
   const main = p.counters[0];
   const photo = p.photoId ? `<span class="pc-photo" data-ph="${esc(p.photoId)}"></span>` : '';
-  const row = E('button', 'projcard' + (p.done ? ' done' : '') + (p.photoId ? ' hasphoto' : ''), `${photo}<div class="pc-main"><b>${esc(p.name)}${p.done ? ' <span class="donetick">✓</span>' : ''}</b>
+  const row = E('button', 'projcard' + (p.done ? ' done' : '') + (p.photoId ? ' hasphoto' : ''), `${photo}<div class="pc-main"><b>${craftBadge(p)}${esc(p.name)}${p.done ? ' <span class="donetick">✓</span>' : ''}</b>
     <span class="pc-sub">${projTags(p).map(esc).join(' · ') || (p.done ? 'færdigt' : 'tryk for at fortsætte')}</span></div>
     <div class="pc-count"><span class="pc-num">${main ? main.value : 0}</span><span class="pc-lbl">omg.</span></div>`);
   row.onclick = () => { activeId = p.id; save(); if (!p.done) requestWake(); renderDetail(); };
@@ -94,6 +94,9 @@ function statusCard() {
   const grams = inP.reduce((s, p) => s + (Number(p.gramsUsed) || 0), 0);
   const meters = inP.reduce((s, p) => s + projMeters(p), 0);
   const ongoing = projects.filter((p) => !p.done).length;
+  // "meter strikket" passer kun hvis alt i perioden ER strik — ellers bare "meter garn"
+  const crafts = new Set(projects.map((p) => craftOf(p).id));
+  const metersLabel = crafts.size > 1 ? 'meter garn' : craftOf([...crafts][0]).metersLabel;
 
   const yVal = statusPeriod.y === 'all' ? 'all' : (statusPeriod.y === 'cur' ? curYear : statusPeriod.y);
   const yearOpts = `<option value="all"${statusPeriod.y === 'all' ? ' selected' : ''}>Alle år</option>`
@@ -110,7 +113,7 @@ function statusCard() {
     <div class="sttiles">
       <div class="sttile"><b>${inP.length}</b><span>færdige</span></div>
       <div class="sttile"><b>${ongoing}</b><span>i gang</span></div>
-      <div class="sttile"><b>${meters}</b><span>meter strikket</span></div>
+      <div class="sttile"><b>${meters}</b><span>${metersLabel}</span></div>
       <div class="sttile"><b>${grams}</b><span>gram brugt</span></div>
     </div>
     <div class="stphotos"></div>`;
@@ -136,7 +139,7 @@ async function fillPhotos() {
 
 function renderList() {
   node.innerHTML = '';
-  node.append(E('div', 'pagehead', `<h1>Dine projekter</h1><p class="hint">Tæl omgange uden at miste tællingen — skærmen forbliver tændt mens du strikker.</p>`));
+  node.append(E('div', 'pagehead', `<h1>Dine projekter</h1><p class="hint">Tæl omgange uden at miste tællingen — skærmen forbliver tændt mens du arbejder.</p>`));
   const active = projects.filter((p) => !p.done);
   const done = projects.filter((p) => p.done);
   if (!projects.length) node.append(E('p', 'empty', 'Ingen projekter endnu. Start dit første herunder.'));
@@ -164,7 +167,7 @@ function renderList() {
 
 /* ---- to-do list: ideas for upcoming projects (name + yarn idea + #nøgler) ---- */
 function renderTodo() {
-  node.append(E('h2', 'sechead', '📋 Vil jeg strikke'));
+  node.append(E('h2', 'sechead', '📋 Det vil jeg lave'));
   node.append(E('p', 'hint', 'Idéer til kommende projekter — navn, garn og hvor mange nøgler du regner med.'));
   const list = E('div', 'todolist');
   if (!todos.length) list.append(E('p', 'empty small', 'Ingen idéer endnu. Skriv dit næste projekt op herunder.'));
@@ -184,7 +187,7 @@ function todoCard(t) {
   const note = t.notes ? `<span class="todo-note">${esc(t.notes)}</span>` : '';
   const dots = (t.colors && t.colors.length)
     ? `<span class="todo-dots">${t.colors.map((c) => `<span class="todo-dot" style="background:${esc(c)}"></span>`).join('')}</span>` : '';
-  const mid = E('button', 'todo-main', `<b>${esc(t.name)}</b>${sub}${note}${dots}`);
+  const mid = E('button', 'todo-main', `<b>${craftBadge(t)}${esc(t.name)}</b>${sub}${note}${dots}`);
   mid.onclick = () => todoModal(t);
   const balls = t.balls ? `<span class="todo-balls">${esc(String(t.balls))} ${Number(t.balls) === 1 ? 'nøgle' : 'nøgler'}</span>` : '';
   card.append(chk, mid, E('div', 'todo-right', balls));
@@ -196,7 +199,9 @@ function todoModal(existing) {
   // suggest yarns she has used or has in her stash
   const knownYarns = [...new Set([...projects.flatMap(yarnsOf), ...store.get('stash', []).map((s) => s.name)].filter(Boolean))];
   const yarnOpts = knownYarns.map((y) => `<option value="${esc(y)}">`).join('');
+  let tcraft = craftOf(existing);
   f.innerHTML = `<h2>${existing ? 'Rediger idé' : 'Ny projekt-idé'}</h2>
+    <div class="craftpick" id="t-craft">${CRAFT_LIST.map((c) => `<button type="button" class="craftbtn${c.id === tcraft.id ? ' on' : ''}" data-c="${c.id}"><span class="cb-emoji">${c.icon}</span><span class="cb-label">${c.label}</span></button>`).join('')}</div>
     <label>Projekt<input id="t-name" type="text" maxlength="40" placeholder="fx Stribet sweater" value="${existing ? esc(existing.name) : ''}"></label>
     <label>Garn-idé<input id="t-yarn" type="text" list="t-yarnlist" maxlength="60" placeholder="fx Drops Air, lyseblå" value="${existing ? esc(existing.yarn || '') : ''}"></label>
     <datalist id="t-yarnlist">${yarnOpts}</datalist>
@@ -222,6 +227,10 @@ function todoModal(existing) {
     });
   };
   drawColors();
+  f.querySelectorAll('.craftbtn').forEach((b) => b.onclick = () => {
+    tcraft = craftOf(b.dataset.c);
+    f.querySelectorAll('.craftbtn').forEach((x) => x.classList.toggle('on', x === b));
+  });
   f.querySelector('#t-colorin').onchange = (e) => { const v = e.target.value; if (v && !colors.includes(v)) { colors.push(v); drawColors(); } };
   f.querySelector('.cancel').onclick = () => m.close();
   const del = f.querySelector('.del');
@@ -234,8 +243,8 @@ function todoModal(existing) {
     const notes = f.querySelector('#t-notes').value.trim();
     const bv = parseInt(f.querySelector('#t-balls').value, 10);
     const balls = Number.isFinite(bv) && bv > 0 ? bv : null;
-    if (existing) Object.assign(existing, { name, yarn, balls, notes, colors });
-    else todos.push({ id: uid(), name, yarn, balls, notes, colors, done: false });
+    if (existing) Object.assign(existing, { craft: tcraft.id, name, yarn, balls, notes, colors });
+    else todos.push({ id: uid(), craft: tcraft.id, name, yarn, balls, notes, colors, done: false });
     saveTodos(); m.close(); renderList();
   };
 }
@@ -248,7 +257,7 @@ function startTodoAsProject(t) {
   if (t.balls) bits.push('Ca. ' + t.balls + ' nøgler');
   if (t.colors && t.colors.length) bits.push('Farver: ' + t.colors.join(', '));
   const p = {
-    id: uid(), name: t.name, yarns: t.yarn ? [t.yarn] : [], needles: [],
+    id: uid(), craft: craftOf(t).id, name: t.name, yarns: t.yarn ? [t.yarn] : [], needles: [],
     notes: bits.join(' · '), categoryId: null,
     size: '', gauge: '', recipient: '', startDate: todayStr(), endDate: '',
     gramsUsed: null, runM: null, runG: 50,
@@ -267,7 +276,7 @@ function renderDetail() {
   const head = E('div', 'detailhead');
   const back = E('button', 'iconbtn back', '‹ Projekter'); back.onclick = () => { activeId = null; save(); releaseWake(); renderList(); };
   const edit = E('button', 'iconbtn', '✎'); edit.onclick = () => projectModal(p);
-  head.append(back, E('div', 'dtitle', `<b>${esc(p.name)}</b><small>${projTags(p).map(esc).join(' · ')}</small>`), edit);
+  head.append(back, E('div', 'dtitle', `<b>${craftBadge(p)}${esc(p.name)}</b><small>${[craftOf(p).label, ...projTags(p)].map(esc).join(' · ')}</small>`), edit);
   node.append(head);
 
   // main counter — big
@@ -291,7 +300,7 @@ function renderDetail() {
   // project details (size / gauge / recipient / dates) — only the ones that are filled
   const rows = [];
   if (p.size) rows.push(['Størrelse', esc(p.size)]);
-  if (p.gauge) rows.push(['Strikkefasthed', esc(p.gauge)]);
+  if (p.gauge) rows.push([craftOf(p).gauge, esc(p.gauge)]);
   if (p.recipient) rows.push(['Modtager', esc(p.recipient)]);
   if (p.startDate) rows.push(['Startet', fmtDate(p.startDate)]);
   if (p.endDate) rows.push(['Afsluttet', fmtDate(p.endDate)]);
@@ -341,12 +350,16 @@ function projectModal(existing) {
   // remember previously used yarns (from projects + stash)
   const knownYarns = [...new Set([...projects.flatMap(yarnsOf), ...store.get('stash', []).map((s) => s.name)].filter(Boolean))];
   const yarnOpts = knownYarns.map((y) => `<option value="${esc(y)}">`).join('');
-  // needle sizes 2–12 mm in ½-mm steps (+ keep any existing custom values)
-  const sizes = []; for (let mm = 2; mm <= 12.0001; mm += 0.5) sizes.push(needleFmt(mm));
+  // strik eller hækling — styrer ord (pind/hæklenål) og størrelseslisten
+  let craft = craftOf(existing);
   const exYarns = existing ? yarnsOf(existing) : [];
   const exNeedles = existing ? needlesOf(existing) : [];
-  exNeedles.forEach((nd) => { if (nd && !sizes.includes(nd)) sizes.unshift(nd); });
-  const needleOptsHtml = (sel) => `<option value="">— vælg —</option>` + sizes.map((s) => `<option${s === sel ? ' selected' : ''}>${esc(s)}</option>`).join('');
+  const sizeList = () => {
+    const s = craft.sizes.map(mmFmt);
+    exNeedles.forEach((nd) => { if (nd && !s.includes(nd)) s.unshift(nd); });
+    return s;
+  };
+  const needleOptsHtml = (sel) => `<option value="">— vælg —</option>` + sizeList().map((s) => `<option${s === sel ? ' selected' : ''}>${esc(s)}</option>`).join('');
   // run length (from the yarn band): metres per N grams (N defaults to 50, editable)
   const exRunM = existing ? (existing.runM != null ? existing.runM : (existing.mPer50g != null ? existing.mPer50g : '')) : '';
   const exRunG = existing && existing.runG != null ? existing.runG : 50;
@@ -354,18 +367,20 @@ function projectModal(existing) {
   const cats = store.get('collections', []);
   const catOpts = `<option value="">— ingen —</option>` + cats.map((c) => `<option value="${c.id}"${existing && existing.categoryId === c.id ? ' selected' : ''}>${esc(c.name)}</option>`).join('') + `<option value="__new">+ Ny kategori…</option>`;
   f.innerHTML = `<h2>${existing ? 'Rediger projekt' : 'Nyt projekt'}</h2>
+    <div class="formsec-min">Hvad laver du?</div>
+    <div class="craftpick" id="f-craft">${CRAFT_LIST.map((c) => `<button type="button" class="craftbtn${c.id === craft.id ? ' on' : ''}" data-c="${c.id}"><span class="cb-emoji">${c.icon}</span><span class="cb-label">${c.label}</span></button>`).join('')}</div>
     <label>Navn<input id="f-name" type="text" maxlength="40" placeholder="fx Sommerbluse" value="${existing ? esc(existing.name) : ''}"></label>
     <div class="formsec-min">Garn <span class="fm-hint">(du kan tilføje flere)</span></div>
     <div id="f-yarns" class="repeat-list"></div>
     <datalist id="f-yarnlist">${yarnOpts}</datalist>
     <button type="button" class="addrow" id="f-addyarn">+ Tilføj garn</button>
-    <div class="formsec-min">Pinde <span class="fm-hint">(du kan tilføje flere)</span></div>
+    <div class="formsec-min"><span class="lbl-toolmany">${craft.toolMany}</span> <span class="fm-hint">(du kan tilføje flere)</span></div>
     <div id="f-needles" class="repeat-list"></div>
-    <button type="button" class="addrow" id="f-addneedle">+ Tilføj pind</button>
+    <button type="button" class="addrow" id="f-addneedle">${craft.addTool}</button>
     <label>Kategori<select id="f-cat">${catOpts}</select></label>
     <div class="formsec">Projektdetaljer (valgfrit)</div>
     <div class="grid2"><label class="nl">Størrelse<input id="f-size" type="text" maxlength="30" placeholder="fx M / 98-104" value="${existing ? esc(existing.size || '') : ''}"></label><label class="nl">Modtager<input id="f-recipient" type="text" maxlength="30" placeholder="fx Til mor" value="${existing ? esc(existing.recipient || '') : ''}"></label></div>
-    <label>Strikkefasthed<input id="f-gauge" type="text" maxlength="40" placeholder="fx 22 m × 30 p = 10×10 cm" value="${existing ? esc(existing.gauge || '') : ''}"></label>
+    <label><span class="lbl-gauge">${craft.gauge}</span><input id="f-gauge" type="text" maxlength="40" placeholder="${craft.gaugeEx}" value="${existing ? esc(existing.gauge || '') : ''}"></label>
     <div class="grid2"><label class="nl">Startdato${dateBtnHtml('f-start', existing ? existing.startDate : '')}</label><label class="nl">Slutdato${dateBtnHtml('f-end', existing ? existing.endDate : '')}</label></div>
     <label>Noter<textarea id="f-notes" rows="2" maxlength="200" placeholder="evt. noter">${existing ? esc(existing.notes || '') : ''}</textarea></label>
     <div class="formsec">Garnforbrug (til din statusoversigt — valgfrit)</div>
@@ -383,7 +398,7 @@ function projectModal(existing) {
   };
   const addNeedleRow = (val = '') => {
     const row = E('div', 'reprow');
-    row.innerHTML = `<select class="rn">${needleOptsHtml(val)}</select><button type="button" class="reprm" aria-label="Fjern pind">×</button>`;
+    row.innerHTML = `<select class="rn">${needleOptsHtml(val)}</select><button type="button" class="reprm" aria-label="${craft.rmTool}">×</button>`;
     row.querySelector('.reprm').onclick = () => row.remove();
     needlesBox.append(row);
   };
@@ -391,6 +406,19 @@ function projectModal(existing) {
   (exNeedles.length ? exNeedles : ['']).forEach(addNeedleRow);
   f.querySelector('#f-addyarn').onclick = () => addYarnRow('');
   f.querySelector('#f-addneedle').onclick = () => addNeedleRow('');
+  // Skift håndværk → ordene og størrelseslisten følger med med det samme.
+  f.querySelectorAll('.craftbtn').forEach((b) => b.onclick = () => {
+    craft = craftOf(b.dataset.c);
+    f.querySelectorAll('.craftbtn').forEach((x) => x.classList.toggle('on', x === b));
+    f.querySelector('.lbl-toolmany').textContent = craft.toolMany;
+    f.querySelector('#f-addneedle').textContent = craft.addTool;
+    f.querySelector('.lbl-gauge').textContent = craft.gauge;
+    f.querySelector('#f-gauge').placeholder = craft.gaugeEx;
+    // behold de valgte størrelser hvis de også findes i det nye håndværk
+    const chosen = [...needlesBox.querySelectorAll('.rn')].map((s) => s.value);
+    needlesBox.innerHTML = '';
+    (chosen.length ? chosen : ['']).forEach((v) => addNeedleRow(sizeList().includes(v) ? v : ''));
+  });
   wireDateButtons(f);
   const catSel = f.querySelector('#f-cat');
   catSel.onchange = () => {
@@ -413,7 +441,7 @@ function projectModal(existing) {
     const runM = Number.isFinite(rm) && rm > 0 ? rm : null, runG = Number.isFinite(rg) && rg > 0 ? rg : 50;
     // a manual end date drives the completion date used in the status overview
     const finishedAt = endDate ? new Date(endDate + 'T12:00').getTime() : (existing ? existing.finishedAt : undefined);
-    const fields = { name, yarns, needles, notes, categoryId, size, gauge, recipient, startDate, endDate, gramsUsed, runM, runG };
+    const fields = { craft: craft.id, name, yarns, needles, notes, categoryId, size, gauge, recipient, startDate, endDate, gramsUsed, runM, runG };
     if (existing) { Object.assign(existing, fields); if (endDate) existing.finishedAt = finishedAt; delete existing.yarn; delete existing.needle; delete existing.mPer50g; delete existing.mPer100g; }
     else { const p = { id: uid(), ...fields, finishedAt, counters: [{ id: uid(), label: 'Omgange', value: 0, wrapAt: 0, repeats: 0, main: true }] }; projects.push(p); activeId = p.id; }
     save(); m.close(); render();
@@ -463,7 +491,7 @@ function finishModal(p) {
   const yarnHint = yarnsOf(p).length ? ` af ${esc(yarnsOf(p).join(', '))}` : '';
   f.innerHTML = `<h2 class="finishhead"><span class="finishtick"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span> Tillykke — det er færdigt!</h2>
     <p class="hint">Gem et minde om “${esc(p.name)}” — det vises i din statusoversigt.</p>
-    <label class="photopick">Billede af det færdige strik (valgfrit)<input id="fin-photo" type="file" accept="image/*"></label>
+    <label class="photopick">Billede af det færdige arbejde (valgfrit)<input id="fin-photo" type="file" accept="image/*"></label>
     <div id="fin-prev" class="finprev" hidden></div>
     <label>Afsluttet dato${dateBtnHtml('fin-date', p.endDate || todayStr())}</label>
     <div class="formsec">Garnforbrug${yarnHint} (valgfrit)</div>

@@ -3,6 +3,7 @@
 // (Theme, device sync and backup live under the gear ⚙️ → Indstillinger, see settings.js.)
 import { store, uid } from './store.js';
 import { putPhoto, getPhoto, delPhoto } from './idb.js';
+import { CRAFTS } from './craft.js';
 
 let node, M;
 let stash, tools;
@@ -46,7 +47,7 @@ function downscaleImage(file, max = 1280, q = 0.82) {
 
 function render() {
   node.innerHTML = '';
-  node.append(E('div', 'pagehead', `<h1>Garn &amp; grej</h1><p class="hint">Hold styr på dit garnlager og dine pinde.</p>`));
+  node.append(E('div', 'pagehead', `<h1>Garn &amp; grej</h1><p class="hint">Hold styr på dit garnlager, dine pinde og dine hæklenåle.</p>`));
 
   // ---- garn ----
   node.append(E('h2', 'sechead', 'Garnlager'));
@@ -66,12 +67,14 @@ function render() {
   fillPhotos();
 
   // ---- grej ----
-  node.append(E('h2', 'sechead', 'Pinde & grej'));
+  node.append(E('h2', 'sechead', 'Pinde, hæklenåle & grej'));
   if (!tools.length) node.append(E('p', 'empty small', 'Intet grej noteret endnu.'));
   const tl = E('div', 'invlist');
   tools.forEach((t) => {
     const sub = [t.size ? t.size + ' mm' : '', t.length ? t.length + ' cm' : '', t.notes].filter(Boolean).map(esc).join(' · ');
-    const row = E('div', 'invrow', `<div class="inv-main"><b>${esc(t.kind)}</b><span class="inv-sub">${sub || '—'}</span></div>`);
+    // lille mærke, så pinde og hæklenåle er til at kende fra hinanden på listen
+    const icon = /hækl/i.test(t.kind || '') ? CRAFTS.haekling.icon : CRAFTS.strik.icon;
+    const row = E('div', 'invrow', `<div class="inv-main"><b><span class="craftbadge">${icon}</span>${esc(t.kind)}</b><span class="inv-sub">${sub || '—'}</span></div>`);
     const ed = E('button', 'iconbtn', '✎'); ed.onclick = () => toolModal(t);
     row.append(ed); tl.append(row);
   });
@@ -128,8 +131,10 @@ function yarnModal(g) {
 
 function toolModal(t) {
   const f = E('div', 'form');
+  const KINDS = ['Rundpind', 'Strømpepinde', 'Jumperpinde', 'Hæklenål', 'Tunesisk hæklenål', 'Maskemarkører', 'Maskeholder', 'Uldnål', 'Målebånd', 'Masketæller'];
   f.innerHTML = `<h2>${t ? 'Rediger grej' : 'Tilføj grej'}</h2>
-    ${field('t-kind', 'Type', t && t.kind, 'fx Rundpind / Strømpepinde')}
+    <label>Type<input id="t-kind" type="text" list="t-kindlist" maxlength="40" value="${t && t.kind ? esc(t.kind) : ''}" placeholder="fx Rundpind / Hæklenål"></label>
+    <datalist id="t-kindlist">${KINDS.map((k) => `<option value="${k}">`).join('')}</datalist>
     <div class="grid2">${field('t-size', 'Størrelse (mm)', t && t.size, '', 'number')}${field('t-length', 'Længde (cm)', t && t.length, '', 'number')}</div>
     ${field('t-notes', 'Noter', t && t.notes, '')}
     <div class="form-actions">${t ? '<button class="ghost del">Slet</button>' : ''}<button class="ghost cancel">Annuller</button><button class="primary ok">Gem</button></div>`;
