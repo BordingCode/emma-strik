@@ -58,17 +58,33 @@ export const craftBadge = (x) => {
    Kilder: Hobbii's hækleforkortelser + Craft Yarn Council's standardliste.
    US og UK bruger DE SAMME ord om FORSKELLIGE masker — den fælde ødelægger
    projekter, så den står øverst i ordbogen.
+
+   `sym`: hæklediagram-symbol (Craft Yarn Council-konventionen — se
+   craftyarncouncil.com/standards/crochet-chart-symbols). Antal streger over
+   stammen følger antal omslag: fastmaske har ingen, halvstangmaske én kort
+   tværstreg for toppen, stangmaske én skrå streg, dobbeltstangmaske to.
 --------------------------------------------------------------------------- */
 export const CROCHET_ABBR = [
-  { da: 'lm', name: 'luftmaske', desc: 'Kædens byggesten — grundlaget du starter på.', us: 'ch (chain)', uk: 'ch (chain)' },
-  { da: 'km', name: 'kædemaske', desc: 'Den flade maske der lukker en omgang eller flytter dig hen.', us: 'sl st (slip stitch)', uk: 'ss (slip stitch)' },
-  { da: 'fm', name: 'fastmaske', desc: 'Den lave, tætte maske. Amigurumi er næsten kun fastmasker.', us: 'sc (single crochet)', uk: 'dc (double crochet)' },
-  { da: 'hstm', name: 'halvstangmaske', desc: 'Midt imellem fastmaske og stangmaske.', us: 'hdc (half double crochet)', uk: 'htr (half treble)' },
-  { da: 'stm', name: 'stangmaske', desc: 'Den høje maske — går hurtigt og bliver luftigt.', us: 'dc (double crochet)', uk: 'tr (treble)' },
-  { da: 'dbstm', name: 'dobbeltstangmaske', desc: 'Endnu højere end en stangmaske.', us: 'tr (treble)', uk: 'dtr (double treble)' },
-  { da: 'rk', name: 'række', desc: 'Én vej frem og tilbage (fladt arbejde).', us: 'row', uk: 'row' },
-  { da: 'omg', name: 'omgang', desc: 'Hele vejen rundt (rundt arbejde, fx amigurumi).', us: 'rnd (round)', uk: 'rnd (round)' },
-  { da: 'MR', name: 'magisk ring', desc: 'Startringen til rundt arbejde — den kan strammes helt til.', us: 'MR / magic ring', uk: 'MR / magic ring' },
-  { da: 'ind i', name: 'udtagning', desc: '2 masker i samme maske — arbejdet bliver bredere.', us: 'inc (increase)', uk: 'inc (increase)' },
-  { da: 'sm', name: 'indtagning', desc: '2 masker hækles sammen — arbejdet bliver smallere.', us: 'dec / sc2tog', uk: 'dec / dc2tog' },
+  { da: 'lm', name: 'luftmaske', desc: 'Kædens byggesten — grundlaget du starter på.', us: 'ch (chain)', uk: 'ch (chain)',
+    sym: SVG('<ellipse cx="12" cy="12" rx="4.5" ry="8"/>') },
+  { da: 'km', name: 'kædemaske', desc: 'Den flade maske der lukker en omgang eller flytter dig hen.', us: 'sl st (slip stitch)', uk: 'ss (slip stitch)',
+    sym: SVG('<circle cx="12" cy="12" r="3" fill="currentColor"/>') },
+  { da: 'fm', name: 'fastmaske', desc: 'Den lave, tætte maske. Amigurumi er næsten kun fastmasker.', us: 'sc (single crochet)', uk: 'dc (double crochet)',
+    sym: SVG('<path d="M12 5v14M5 12h14"/>') },
+  { da: 'hstm', name: 'halvstangmaske', desc: 'Midt imellem fastmaske og stangmaske.', us: 'hdc (half double crochet)', uk: 'htr (half treble)',
+    sym: SVG('<path d="M12 5v14"/><path d="M8.5 8h7"/>') },
+  { da: 'stm', name: 'stangmaske', desc: 'Den høje maske — går hurtigt og bliver luftigt.', us: 'dc (double crochet)', uk: 'tr (treble)',
+    sym: SVG('<path d="M12 4v16"/><path d="M8.5 11 15.5 9"/>') },
+  { da: 'dbstm', name: 'dobbeltstangmaske', desc: 'Endnu højere end en stangmaske.', us: 'tr (treble)', uk: 'dtr (double treble)',
+    sym: SVG('<path d="M12 4v16"/><path d="M8.5 9 15.5 7"/><path d="M8.5 13 15.5 11"/>') },
+  { da: 'rk', name: 'række', desc: 'Én vej frem og tilbage (fladt arbejde).', us: 'row', uk: 'row',
+    sym: SVG('<path d="M4 9h13M17 9l-3-3M17 9l-3 3"/><path d="M20 15H7M7 15l3-3M7 15l3 3"/>') },
+  { da: 'omg', name: 'omgang', desc: 'Hele vejen rundt (rundt arbejde, fx amigurumi).', us: 'rnd (round)', uk: 'rnd (round)',
+    sym: SVG('<path d="M18 8a7 7 0 1 0 1.4 6.2"/><path d="M19.6 3.8v4.4h-4.4"/>') },
+  { da: 'MR', name: 'magisk ring', desc: 'Startringen til rundt arbejde — den kan strammes helt til.', us: 'MR / magic ring', uk: 'MR / magic ring',
+    sym: SVG('<circle cx="12" cy="10" r="6.5"/><path d="M12 16.5V20"/>') },
+  { da: 'ind i', name: 'udtagning', desc: '2 masker i samme maske — arbejdet bliver bredere.', us: 'inc (increase)', uk: 'inc (increase)',
+    sym: SVG('<path d="M12 20 8 6"/><path d="M12 20 16 6"/>') },
+  { da: 'sm', name: 'indtagning', desc: '2 masker hækles sammen — arbejdet bliver smallere.', us: 'dec / sc2tog', uk: 'dec / dc2tog',
+    sym: SVG('<path d="M8 20 12 6"/><path d="M16 20 12 6"/>') },
 ];

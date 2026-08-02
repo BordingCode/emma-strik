@@ -295,12 +295,20 @@ function abbrCard() {
     <p>De bruger <b>de samme ord om forskellige masker</b>. Amerikansk “double crochet” er en <b>stangmaske</b> — britisk “double crochet” er en <b>fastmaske</b>. Følger du den forkerte, bliver arbejdet helt forkert i højden.</p>
     <p class="wtip">Kig efter <b>“US terms”</b> eller <b>“UK terms”</b> øverst i opskriften. Står der intet, men opskriften nævner <i>“sc”</i>, er den amerikansk (britiske opskrifter bruger ikke sc).</p>`;
   c.append(warn);
-  const rows = CROCHET_ABBR.map((a) => `<tr><td><b>${esc(a.da)}</b><span class="ab-name">${esc(a.name)}</span></td><td>${esc(a.us)}</td><td>${esc(a.uk)}</td></tr>`).join('');
+
+  const showSym = store.get('abbrSymbols', true);
+  const seg = E('div', 'unittoggle abbrseg', `
+    <button type="button" class="ut-btn${showSym ? '' : ' on'}" data-sym="0">Tekst</button>
+    <button type="button" class="ut-btn${showSym ? ' on' : ''}" data-sym="1">Tekst + symboler</button>`);
+  seg.querySelectorAll('.ut-btn').forEach((b) => b.onclick = () => { store.set('abbrSymbols', b.dataset.sym === '1'); render(); });
+  c.append(seg);
+
+  const rows = CROCHET_ABBR.map((a) => `<tr><td>${showSym ? `<span class="ab-sym" aria-hidden="true">${a.sym}</span>` : ''}<b>${esc(a.da)}</b><span class="ab-name">${esc(a.name)}</span></td><td>${esc(a.us)}</td><td>${esc(a.uk)}</td></tr>`).join('');
   const tbl = E('div', 'tblwrap', `<table class="wtbl abbrtbl"><thead><tr><th>Dansk</th><th>Amerikansk (US)</th><th>Britisk (UK)</th></tr></thead><tbody>${rows}</tbody></table>`);
   c.append(tbl);
   const more = E('button', 'ghost wide', 'Hvad betyder maskerne?');
   more.onclick = () => openInfo('Maskerne, forklaret', CROCHET_ABBR.map((a) =>
-    `<p><b>${esc(a.da)}</b> — ${esc(a.name)}<br>${esc(a.desc)}</p>`).join(''));
+    `<p>${showSym ? `<span class="ab-sym ab-sym-lg" aria-hidden="true">${a.sym}</span>` : ''}<b>${esc(a.da)}</b> — ${esc(a.name)}<br>${esc(a.desc)}</p>`).join(''));
   c.append(more);
   return c;
 }
