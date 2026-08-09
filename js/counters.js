@@ -489,6 +489,14 @@ function downscaleImage(file, max = 1280, q = 0.82) {
 function finishModal(p) {
   const f = E('div', 'form finishform');
   const yarnHint = yarnsOf(p).length ? ` af ${esc(yarnsOf(p).join(', '))}` : '';
+  // garn brugt i projektet, der også findes i Garnlager (matchet på navn) — så vi kan spørge om nøglerne skal fjernes derfra
+  const stash = store.get('stash', []);
+  const stashMatches = yarnsOf(p)
+    .map((name) => ({ name, s: stash.find((sg) => sg.name && sg.name.toLowerCase() === name.toLowerCase()) }))
+    .filter((mm) => mm.s);
+  const stashHtml = stashMatches.length ? `<div class="formsec">Garnlager</div>${stashMatches.map((mm, i) => `
+    <label class="check"><input id="fin-stash-upd-${i}" type="checkbox" checked> Fjern brugte nøgler af “${esc(mm.name)}” fra Garnlager</label>
+    <label class="nl">Nøgler tilbage<input id="fin-stash-skeins-${i}" type="number" inputmode="numeric" min="0" value="${mm.s.skeins != null ? esc(mm.s.skeins) : ''}"></label>`).join('')}` : '';
   f.innerHTML = `<h2 class="finishhead"><span class="finishtick"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span> Tillykke — det er færdigt!</h2>
     <p class="hint">Gem et minde om “${esc(p.name)}” — det vises i din statusoversigt.</p>
     <label class="photopick">Billede af det færdige arbejde (valgfrit)<input id="fin-photo" type="file" accept="image/*"></label>
@@ -497,9 +505,17 @@ function finishModal(p) {
     <div class="formsec">Garnforbrug${yarnHint} (valgfrit)</div>
     <div class="grid2"><label class="nl">Garn brugt (g)<input id="fin-grams" type="number" inputmode="numeric" min="0" placeholder="fx 350" value="${p.gramsUsed != null ? p.gramsUsed : ''}"></label><label class="nl">Løbelængde (m)<input id="fin-runm" type="number" inputmode="numeric" min="0" placeholder="fx 150" value="${p.runM != null ? p.runM : (p.mPer50g != null ? p.mPer50g : '')}"></label></div>
     <label class="nl">… pr. antal gram <span class="fm-hint">(typisk 50)</span><input id="fin-rung" type="number" inputmode="numeric" min="1" placeholder="50" value="${p.runG != null ? p.runG : 50}"></label>
+    ${stashHtml}
     <div class="form-actions"><button class="ghost cancel">Annuller</button><button class="primary ok">Gem som færdigt</button></div>`;
   const m = M(f);
   wireDateButtons(f);
+  stashMatches.forEach((mm, i) => {
+    const chk = f.querySelector(`#fin-stash-upd-${i}`);
+    const numLabel = f.querySelector(`#fin-stash-skeins-${i}`).closest('label');
+    // .form label has display:block, so [hidden] alone won't hide it here — set the style directly
+    const sync = () => { numLabel.style.display = chk.checked ? '' : 'none'; };
+    chk.onchange = sync; sync();
+  });
   let photoBlob = null;
   const prev = f.querySelector('#fin-prev');
   f.querySelector('#fin-photo').onchange = async (e) => {
@@ -518,6 +534,17 @@ function finishModal(p) {
     const dstr = f.querySelector('#fin-date').dataset.val;
     p.endDate = dstr || todayStr();
     p.done = true; p.finishedAt = new Date(p.endDate + 'T12:00').getTime();
+    if (stashMatches.length) {
+      let dirty = false;
+      stashMatches.forEach((mm, i) => {
+        const chk = f.querySelector(`#fin-stash-upd-${i}`);
+        if (chk && chk.checked) {
+          const sv = parseFloat(f.querySelector(`#fin-stash-skeins-${i}`).value);
+          if (Number.isFinite(sv) && sv >= 0) { mm.s.skeins = String(sv); dirty = true; }
+        }
+      });
+      if (dirty) store.set('stash', stash);
+    }
     releaseWake(); activeId = null; save(); m.close(); renderList();
   };
 }

@@ -101,6 +101,7 @@ function show(id) {
   const helpers = { el, modal, back: () => show(prevTab) };
   if (!v.built) { v.sec.init(v.node, helpers); v.built = true; }
   else if (v.sec.id === 'settings') { v.sec.init(v.node, helpers); } // refresh sync time/theme on each open
+  else if (v.sec.id === 'lager') { v.sec.init(v.node, helpers); } // refresh on each open — Projekter can update stash (nøgler tilbage) when a project is finished
   window.__es && (window.__es.current = id);
 }
 
