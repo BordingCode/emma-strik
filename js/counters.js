@@ -288,7 +288,7 @@ function renderDetail() {
   const ctrls = E('div', 'mc-ctrls'); ctrls.append(minus, plus);
   // reset just the round counter (not the whole project)
   const mcReset = E('button', 'mc-resetbtn', '↺ Nulstil omgangstæller');
-  mcReset.onclick = () => { if (confirm('Nulstil omgangstælleren til ' + (main.wrapAt ? 1 : 0) + '?')) { main.value = main.wrapAt ? 1 : 0; main.repeats = 0; save(); renderDetail(); } };
+  mcReset.onclick = () => { if (confirm('Nulstil omgangstælleren til ' + (main.wrapAt ? 1 : 0) + '?')) { main.value = main.wrapAt ? 1 : 0; main.repeats = 0; p.counters.filter((c) => c.follow).forEach((c) => { c.value = c.wrapAt ? 1 : 0; c.repeats = 0; }); save(); renderDetail(); } };
   node.append(mc, ctrls, mcReset);
 
   // open the linked recipe (resumes where she left off) or link one
