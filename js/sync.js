@@ -99,10 +99,16 @@ export async function pullIfNewer() {
   finally { busy = false; }
 }
 
-// Auto-push whenever real data changes (debounced). Ignore bookkeeping/transient keys.
+// Auto-push whenever real data changes. The server is shared with Grimoire on Cloudflare's free tier
+// (~1000 saves a day for everyone), so counter taps are batched: at most one upload every 2 minutes,
+// plus right away when the app is left. Ignore bookkeeping/transient keys.
 const IGNORE = new Set(['syncCode', 'syncVersion', 'syncUpdatedAt', 'activeProject', 'lastBackupAt', 'backupSnooze', 'theme']);
+const PUSH_GAP = 120000;
+let lastPush = 0;
+function flushPush() { clearTimeout(pushTimer); pushTimer = null; lastPush = Date.now(); pushNow(); }
 store.subscribe((key) => {
   if (muted || !isLinked() || IGNORE.has(key)) return;
-  clearTimeout(pushTimer);
-  pushTimer = setTimeout(() => pushNow(), 3000);
+  if (pushTimer) return; // an upload is already waiting; this change rides along
+  pushTimer = setTimeout(flushPush, Math.max(3000, PUSH_GAP - (Date.now() - lastPush)));
 });
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden' && pushTimer) flushPush(); });
